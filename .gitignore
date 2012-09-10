@@ -14,3 +14,25 @@
 .idea/modules.xml
 
 .idea/misc.xml
+
+examples/.DS_Store
+
+examples/AdRegions.zip
+
+examples/AdRegions/.DS_Store
+
+examples/AdRegions/ads/1.jpg
+
+examples/AdRegions/ads/2.jpg
+
+examples/AdRegions/ads/3.jpg
+
+examples/AdRegions/ads/4.png
+
+examples/AdRegions/index.html
+
+examples/AdRegions/style.css
+
+examples/AdRegions/test.js
+
+use-cases/content-folding/.DS_Store
