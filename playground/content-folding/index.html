@@ -1,13 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='UTF-8'>
-  <title>Content Folding Example</title>
-  <script src="test.js"></script>
-  <link rel='stylesheet' href='style.css'>
-  <style>
+    <meta charset='UTF-8'>
+    <title>Content Folding Example</title>
+    <link rel='stylesheet' href='style.css'>
 
-  </style>
+    <script src="../modernizr.custom.regions.js"></script>
+    <script src="../cssregions.js"></script>
+    <script src="test.js"></script>
+    <style>
+        .cssregions #ad-source {
+          display: block;
+          -webkit-flow-into: ads;
+          -ms-flow-into: ads;
+        }
+
+        .cssregions aside {
+            -webkit-flow-from: ads;
+            -ms-flow-from: ads;
+        }
+
+        [class^='ad-region'] {
+            display: none;
+            height: 155px;
+            width: 100%; /* Weird that this is required */
+            -webkit-flow-from: ads;
+            -ms-flow-from: ads;
+        }
+    </style>
 </head>
 <body>
 
@@ -75,5 +95,14 @@
   <a href="#"><img src="ads/4.png"></a>
 </div>
 
+<script>
+/*
+1. Parse CSS to extract the CSS Regions rules
+2. Listen for window resize events to be able to react to media queries rules
+3. If CSS Regions rules are in effect use the CSS breaking content engine to split the named flows between the regions
+
+
+ */
+</script>
 </body>
 </html>

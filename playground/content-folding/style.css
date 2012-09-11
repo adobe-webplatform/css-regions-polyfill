@@ -63,19 +63,19 @@ aside {
   float: right;
   width: 30%;
 }
-.cssregions aside {
-  -webkit-flow-from: ads;
-  -ms-flow-from: ads;
-}
+/*.cssregions aside {*/
+  /*-webkit-flow-from: ads;*/
+  /*-ms-flow-from: ads;*/
+/*}*/
 
 #ad-source {
   display: none;
 }
-.cssregions #ad-source {
-  display: block;
-  -webkit-flow-into: ads;
-  -ms-flow-into: ads;
-}
+/*.cssregions #ad-source {*/
+  /*display: block;*/
+  /*-webkit-flow-into: ads;*/
+  /*-ms-flow-into: ads;*/
+/*}*/
 
 #ad-source img { /* the selector is always the source, not the element it flows into */
   width: 100%;
@@ -85,13 +85,13 @@ aside {
   margin: 0 0 10px 0;
 }
 
-[class^='ad-region'] {
-  display: none;
-  height: 155px;
-  width: 100%; /* Weird that this is required */
-  -webkit-flow-from: ads;
-  -ms-flow-from: ads;
-}
+/*[class^='ad-region'] {*/
+  /*display: none;*/
+  /*height: 155px;*/
+  /*width: 100%; *//* Weird that this is required */
+  /*-webkit-flow-from: ads;*/
+  /*-ms-flow-from: ads;*/
+/*}*/
 
 @media (max-width: 800px) {
   .cssregions [class^='ad-region'] {
