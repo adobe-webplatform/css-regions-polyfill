@@ -560,15 +560,15 @@ window.CSSRegions = (function(window, regions) {
     var flowContentIntoRegions = function(regions) {
         console.dir(regions);
 
-        var nameFlow, currentRegion, i, l, j, m, sourceNodes, el, childrenList;
+        var nameFlow, currentRegion, currentFlow, i, l, j, m, sourceNodes, el, childrenList;
 
         for (nameFlow in regions) {
-            currentRegion = regions[nameFlow];
+            currentFlow = regions[nameFlow];
             //assemble the source
             //hide the source
             sourceNodes = [];
-            for (i = 0, l = currentRegion.DOMSource.length; i < l; i++) {
-                el = currentRegion.DOMSource[i];
+            for (i = 0, l = currentFlow.DOMSource.length; i < l; i++) {
+                el = currentFlow.DOMSource[i];
 //                console.dir(el.children);
                 childrenList = el.children;
                 while (childrenList.length) {
@@ -581,10 +581,19 @@ window.CSSRegions = (function(window, regions) {
             }
             //flow the source into regions
             //check the display attribute value (none)
-            for (i = 0, l = currentRegion.DOMRegions.length; i < l; i++) {
+            for (i = 0, l = currentFlow.DOMRegions.length; i < l; i++) {
                 if (sourceNodes.length === 0) break;
-                el = sourceNodes.shift();
-                
+                currentRegion = currentFlow.DOMRegions[i];
+                if (getComputedStyle(currentRegion).display !== "none") {
+                    el = sourceNodes.shift();
+                    if ((i + 1) === l) {
+                        while (el) {
+                            currentRegion.appendChild(el);
+                            el = sourceNodes.shift();
+                        }
+                    }
+                    console.log("este");
+                }
             }
         }
     };
