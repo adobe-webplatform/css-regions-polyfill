@@ -553,22 +553,39 @@ window.CSSRegions = (function(window, regions) {
         while (currentNode = nodeIterator.nextNode()) {
             ret.push(currentNode);
         }
-        console.dir(ret);
         return ret;
     };
 
+    // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
     var flowContentIntoRegions = function(regions) {
-        console.log("flowContent()");
         console.dir(regions);
-        var nameFlow, currentRegion;
+
+        var nameFlow, currentRegion, i, l, j, m, sourceNodes, el, childrenList;
 
         for (nameFlow in regions) {
             currentRegion = regions[nameFlow];
             //assemble the source
             //hide the source
-
+            sourceNodes = [];
+            for (i = 0, l = currentRegion.DOMSource.length; i < l; i++) {
+                el = currentRegion.DOMSource[i];
+//                console.dir(el.children);
+                childrenList = el.children;
+                while (childrenList.length) {
+                    sourceNodes.push(childrenList[0]);
+                    el.removeChild(childrenList[0]);
+                }
+                if (getComputedStyle(el).display !== "none") {
+                    el.style.display = "none";
+                }
+            }
             //flow the source into regions
             //check the display attribute value (none)
+            for (i = 0, l = currentRegion.DOMRegions.length; i < l; i++) {
+                if (sourceNodes.length === 0) break;
+                el = sourceNodes.shift();
+                
+            }
         }
     };
 
