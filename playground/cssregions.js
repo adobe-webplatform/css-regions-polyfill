@@ -415,12 +415,13 @@ Use it responsibly and have fun! ;)
                 var style, property, value,
                     l = this.cssRules.length,
                     regions = {};
+
                 for (var i = 0; i < l; i++) {
                     style = this.cssRules[i].style;
                     for (property in style) {
                         if (property.indexOf("flow-") !== -1) {
                             value = style[property];
-                            regions[value] = regions[value] || {namedFlows: [], regionChains: []};
+                            regions[value] = regions[value] || {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []};
                             if (property.indexOf("flow-into") !== -1) {
                                 regions[value]["namedFlows"].push(this.cssRules[i].selectorText);
                             } else {
@@ -468,14 +469,8 @@ Use it responsibly and have fun! ;)
 
             // parse the rules and look for "flow-into" and "flow-from" rules;
             regions = parser.extractRegions();
-
-            console.dir(regions);
-
             // If there are CSS regions move the content from named flows into region chains
-            var namedFlow;
-            for (namedFlow in regions) {
-
-            }
+            CSSRegions.doLayout(regions);
         }
     }
 
@@ -484,3 +479,102 @@ Use it responsibly and have fun! ;)
     scope.addEventListener("load", init);
        
 }(window);
+
+/**
+ * This is the object responsible for parsing the regions extracted by CSSParser.
+ * Retrieves the DOM elements that formed the named flows and regions chains.
+ * Flows the content into the region chain.
+ * Listens for changes: region chains size or visibility changes and re-flows
+ * the content.
+ *
+ */
+window.CSSRegions = (function(window, regions) {
+    var CSSRegions = {};
+
+    CSSRegions.doLayout = function(regions) {
+        if (regions) {
+            CSSRegions.regions = regions;
+        } else {
+            regions =  CSSRegions.regions;
+        }
+        if (Object.getOwnPropertyNames(regions).length === 0) {
+            return;
+        }
+        console.dir(regions);
+        findDOMOrderForRegions(regions);
+
+        flowContentIntoRegions(regions);
+    };
+
+    var findDOMOrderForRegions = function(regions) {
+        var nameFlow, currentRegion;
+
+        for (nameFlow in regions) {
+            currentRegion = regions[nameFlow];
+            // Find the name flows/region chains DOM elements
+            // Order them by the order of their DOM appearance
+            if (regions[nameFlow].DOMSource.length === 0) {
+                regions[nameFlow].DOMSource = orderNodes(currentRegion.namedFlows);
+            }
+            if (regions[nameFlow].DOMRegions.length === 0) {
+                regions[nameFlow].DOMRegions = orderNodes(currentRegion.regionChains);
+            }
+        }
+    };
+
+    var orderNodes = function(arrSelectors) {
+        var i, j, m, nodeIterator, currentNode,
+            ret = [],
+            tmp = [],
+            nodeList,
+
+            l = arrSelectors.length;
+
+        for (i = 0; i<l; i++) {
+            nodeList = document.querySelectorAll(arrSelectors[i]);
+            for (j = 0, m = nodeList.length; j < m; ++j) {
+              tmp.push(nodeList[j]);
+            }
+        }
+        // createNodeIterator works in FF 3.5+, Chrome 1+, Opera 9+, Safari 3+, IE9+
+        // https://developer.mozilla.org/en-US/docs/DOM/Document.createNodeIterator
+        nodeIterator = document.createNodeIterator(
+                                document.body,
+                                NodeFilter.SHOW_ELEMENT,
+                                { acceptNode: function(node) {
+                                        if (tmp.indexOf(node) >= 0) {
+                                            return NodeFilter.FILTER_ACCEPT;
+                                        } else {
+                                            return NodeFilter.FILTER_SKIP;
+                                        }
+                                    }
+                                 },
+                                            false);
+        while (currentNode = nodeIterator.nextNode()) {
+            ret.push(currentNode);
+        }
+        console.dir(ret);
+        return ret;
+    };
+
+    var flowContentIntoRegions = function(regions) {
+        console.log("flowContent()");
+        console.dir(regions);
+        var nameFlow, currentRegion;
+
+        for (nameFlow in regions) {
+            currentRegion = regions[nameFlow];
+            //assemble the source
+            //hide the source
+
+            //flow the source into regions
+            //check the display attribute value (none)
+        }
+    };
+
+    window.addEventListener("resize", function(e) {
+        CSSRegions.doLayout();
+    });
+
+    return CSSRegions;
+})(window);
