@@ -555,8 +555,7 @@ window.CSSRegions = (function(window, regions) {
 
         for (nameFlow in regions) {
             currentFlow = regions[nameFlow];
-            //assemble the source
-            //hide the source
+            // Build the source to be flown from the region names
             sourceNodes = [];
             for (i = 0, l = currentFlow.DOMSource.length; i < l; i++) {
                 el = currentFlow.DOMSource[i];
@@ -569,16 +568,17 @@ window.CSSRegions = (function(window, regions) {
                     el.style.display = "none";
                 }
             }
-            //flow the source into regions
-            //check the display attribute value (none)
+            // Flow the source into regions
+            // check the display attribute value (none)
             for (i = 0, l = currentFlow.DOMRegions.length; i < l; i++) {
                 if (sourceNodes.length === 0) break;
                 currentRegion = currentFlow.DOMRegions[i];
+                currentRegion.innerHTML = "";
                 if (getComputedStyle(currentRegion).display !== "none") {
                     el = sourceNodes.shift();
                     if ((i + 1) === l) {
                         while (el) {
-                            currentRegion.appendChild(el);
+                            currentRegion.appendChild(el.cloneNode(true));
                             el = sourceNodes.shift();
                         }
                     }
