@@ -491,9 +491,8 @@ window.CSSRegions = (function(window, regions) {
         if (Object.getOwnPropertyNames(regions).length === 0) {
             return;
         }
-        console.dir(regions);
+//        console.dir(regions);
         findDOMOrderForRegions(regions);
-
         flowContentIntoRegions(regions);
     };
 
@@ -514,11 +513,9 @@ window.CSSRegions = (function(window, regions) {
     };
 
     var orderNodes = function(arrSelectors) {
-        var i, j, m, nodeIterator, currentNode,
+        var i, j, m, nodeIterator, currentNode, nodeList,
             ret = [],
             tmp = [],
-            nodeList,
-
             l = arrSelectors.length;
 
         for (i = 0; i<l; i++) {
@@ -549,9 +546,8 @@ window.CSSRegions = (function(window, regions) {
 
     // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
     var flowContentIntoRegions = function(regions) {
-        console.dir(regions);
-
-        var nameFlow, currentRegion, currentFlow, i, l, j, m, sourceNodes, el, childrenList;
+//        console.dir(regions);
+        var nameFlow, currentRegion, currentFlow, i, l, j, m, sourceNodes, destinationNodes, el, childrenList;
 
         for (nameFlow in regions) {
             currentFlow = regions[nameFlow];
@@ -568,24 +564,66 @@ window.CSSRegions = (function(window, regions) {
                     el.style.display = "none";
                 }
             }
-            // Flow the source into regions
-            // check the display attribute value (none)
+            // Take out the regions with display:none;
+            destinationNodes = [];
             for (i = 0, l = currentFlow.DOMRegions.length; i < l; i++) {
-                if (sourceNodes.length === 0) break;
-                currentRegion = currentFlow.DOMRegions[i];
+                el = currentFlow.DOMRegions[i];
+                if (getComputedStyle(el).display !== "none") {
+                    destinationNodes.push(el);
+                }
+            }
+            // Flow the source into regions
+            // Check the display attribute value (none)
+            for (i = 0, l = destinationNodes.length; i < l; i++) {
+                if (sourceNodes.length === 0) {
+                    break;
+                }
+                currentRegion = destinationNodes[i];
                 currentRegion.innerHTML = "";
                 if (getComputedStyle(currentRegion).display !== "none") {
                     el = sourceNodes.shift();
+                    // The last region gets all the remaining content
                     if ((i + 1) === l) {
                         while (el) {
                             currentRegion.appendChild(el.cloneNode(true));
                             el = sourceNodes.shift();
                         }
+                    } else {
+                        while (el) {
+                            el = addContentToRegion(el, currentRegion);
+                            if (el) {
+                                // The current regions if filled, time to move to the next one
+                                sourceNodes.unshift(el);
+                                break;
+                            } else {
+                                el = sourceNodes.shift();
+                            }
+                        }
                     }
-                    console.log("este");
                 }
             }
         }
+    };
+
+    var addContentToRegion = function(elemContent, region) {
+        var ret = null, el = elemContent.cloneNode(true);
+        region.appendChild(el);
+        if (checkForOverflow(region)) {
+            region.removeChild(el);
+            ret = elemContent;
+        }
+        return ret;
+    };
+
+    // Check the DOM element for having overflow content
+    var checkForOverflow = function(el) {
+        var isOverflowing, curOverflow = el.style.overflow;
+        if ( !curOverflow || curOverflow === "visible" ) {
+            el.style.overflow = "hidden";
+        }
+        isOverflowing = el.clientHeight < el.scrollHeight;
+        el.style.overflow = curOverflow;
+        return isOverflowing;
     };
 
     window.addEventListener("resize", function(e) {
