@@ -486,19 +486,17 @@ window.CSSRegions = (function(window, regions) {
         if (regions) {
             CSSRegions.regions = regions;
         } else {
-            regions =  CSSRegions.regions;
+            regions =  CSSRegions.regions || null;
         }
         if (Object.getOwnPropertyNames(regions).length === 0) {
             return;
         }
 //        console.dir(regions);
-        findDOMOrderForRegions(regions);
         flowContentIntoRegions(regions);
     };
 
     var findDOMOrderForRegions = function(regions) {
         var nameFlow, currentRegion;
-
         for (nameFlow in regions) {
             currentRegion = regions[nameFlow];
             // Find the name flows/region chains DOM elements
@@ -548,6 +546,8 @@ window.CSSRegions = (function(window, regions) {
     var flowContentIntoRegions = function(regions) {
 //        console.dir(regions);
         var nameFlow, currentRegion, currentFlow, i, l, j, m, sourceNodes, destinationNodes, el, childrenList;
+
+        findDOMOrderForRegions(regions);
 
         for (nameFlow in regions) {
             currentFlow = regions[nameFlow];
@@ -605,8 +605,16 @@ window.CSSRegions = (function(window, regions) {
         }
     };
 
+    /**
+     * Flows the elemContent into region. If the content to be consumed flows out of region,
+     * it returns the overflow part as a DOM element.
+     * @param elemContent
+     * @param region
+     * @return null or a DOM element
+     */
     var addContentToRegion = function(elemContent, region) {
-        var ret = null, el = elemContent.cloneNode(true);
+        var ret = null,
+            el = elemContent.cloneNode(true);
         region.appendChild(el);
         if (checkForOverflow(region)) {
             region.removeChild(el);
@@ -615,7 +623,11 @@ window.CSSRegions = (function(window, regions) {
         return ret;
     };
 
-    // Check the DOM element for having overflow content
+    /**
+     * Returns true if the argument has content that overflows.
+     * @param el
+     * @return {Boolean}
+     */
     var checkForOverflow = function(el) {
         var isOverflowing, curOverflow = el.style.overflow;
         if ( !curOverflow || curOverflow === "visible" ) {
