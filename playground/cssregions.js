@@ -43,65 +43,65 @@ Use it responsibly and have fun! ;)
             
             // shameless augmentation of String with a trim function 
             String.prototype.trim = function(string){
-                return string.replace(/^\s+/,"").replace(/\s+$/,"")
+                return string.replace(/^\s+/,"").replace(/\s+$/,"");
             }
         }
     }()
     
     function CSSRule(){ 
-        this.selectorText = null
-        this.style = {}
-        this.type = "rule"
+        this.selectorText = null;
+        this.style = {};
+        this.type = "rule";
     }
     
     CSSRule.prototype = {    
         
          setSelector: function(string){ 
-            this.selectorText = string
+            this.selectorText = string;
             
             // detect @-rules in the following format: @rule-name identifier{ }
-            var ruleType = string.match(/^@([^\s]+)\s*([^{]+)?/)  
+            var ruleType = string.match(/^@([^\s]+)\s*([^{]+)?/);
 
             if (ruleType && ruleType[1]){
                 switch (ruleType[1]){
                     case "template":
-                        this.type = "template"
-                        this.cssRules = []
+                        this.type = "template";
+                        this.cssRules = [];
                     break
 
                     case "slot":
-                        this.type = "slot"
+                        this.type = "slot";
                     break
                     
                     default:
-                        this.type = "unknown"
+                        this.type = "unknown";
                 }
                 
                 // set the identifier of the rule
-                this.identifier = ruleType[2] || "auto"
+                this.identifier = ruleType[2] || "auto";
             }
         }, 
 
         setStyle: function(properties){ 
             
             if (!properties){
-                throw new TypeError("CSSRule.setStyles(). Invalid input. Expected 'object', got " + properties)
+                throw new TypeError("CSSRule.setStyles(). Invalid input. Expected 'object', got " + properties);
             }
 
-            this.style = properties || {}
+            this.style = properties || {};
 
-            return this.style
+            return this.style;
         }, 
 
         setParentRule: function(rule){
 
             if (!rule){
-                throw new TypeError("CSSRule.setParentRule(). Invalid input. Expected 'object', got " + properties)
+                throw new TypeError("CSSRule.setParentRule(). Invalid input. Expected 'object', got " + properties);
             }
 
-            this.parentRule = rule
+            this.parentRule = rule;
 
-            return this.parentRule
+            return this.parentRule;
         }
     }
 
@@ -126,10 +126,10 @@ Use it responsibly and have fun! ;)
             @return {String} The selelector-like string
         */
         function getSelector(string){
-            var sets = string.trim().split(";")    
+            var sets = string.trim().split(";");
 
             if (sets.length){
-                return sets.pop().trim()
+                return sets.pop().trim();
             }  
 
             return null;
@@ -148,33 +148,33 @@ Use it responsibly and have fun! ;)
         */
         function parseCSSProperties(string){
              var properties = {},
-                 sets = string.trim().split(";")
+                 sets = string.trim().split(";");
 
              if (!sets || !sets.length){
-                 return properties
+                 return properties;
              }                    
 
              sets.forEach(function(set){ 
 
                  // invalid key/valye pair
                  if (set.indexOf(":") == -1){ 
-                     return
+                     return;
                  }         
 
                  var key, 
                      value,
-                     parts = set.split(":")
+                     parts = set.split(":");
                     
 
                  if (parts[0] !== undefined && parts[1] !== undefined) {
-                     key = parts[0].trim()
-                     value = parts[1].trim().replace(/[\"\']/g, "")
+                     key = parts[0].trim();
+                     value = parts[1].trim().replace(/[\"\']/g, "");
 
-                     properties[key] = value
+                     properties[key] = value;
                  }
              }) 
 
-             return properties    
+             return properties;
          }            
          
          /*
@@ -202,14 +202,14 @@ Use it responsibly and have fun! ;)
                 selector = getSelector(token),
                 remainder = string.substr(start + 1, string.length),
                 end = remainder.indexOf("}"),
-                nextStart = remainder.indexOf("{")
+                nextStart = remainder.indexOf("{");
               
              if (start > 0){
                      
-                 rule.setSelector(selector)
+                 rule.setSelector(selector);
 
                  if (parent){  
-                     rule.setParentRule(parent)
+                     rule.setParentRule(parent);
                     
                     /*
                         If it's a nested structure (a parent exists) properties might be mixed in with nested rules.
@@ -225,42 +225,41 @@ Use it responsibly and have fun! ;)
                             } 
                         }
                     */  
-                    properties = parseCSSProperties(token)
+                    properties = parseCSSProperties(token);
 
-                    parent.setStyle(properties)
+                    parent.setStyle(properties);
                  }
 
                   // nested blocks! the next "{" occurs before the next "}"
                  if (nextStart > -1 && nextStart < end){  
                      
                      // find where the block ends
-                     end = getBalancingBracketIndex(remainder, 1)
+                     end = getBalancingBracketIndex(remainder, 1);
                      
                      // extract the nested block cssText
-                     var block = remainder.substring(0, end)
+                     var block = remainder.substring(0, end);
                      
-                     properties = parseCSSProperties(token)    
+                     properties = parseCSSProperties(token);
 
-                     rule.setStyle(properties)
-                     rule.cssRules = rule.cssRules || []  
+                     rule.setStyle(properties);
+                     rule.cssRules = rule.cssRules || [];
                      
                      // parse the rules of this block, and assign them to this block's rule object
-                     parseBlocks(block, rule.cssRules, rule)
+                     parseBlocks(block, rule.cssRules, rule);
                      
                      // get unparsed remainder of the CSS string, without the block
-                     remainder = remainder.substring(end + 1, remainder.length)
-                 }
-                 else{ 
-                     properties = parseCSSProperties(remainder.substring(0, end)) 
+                     remainder = remainder.substring(end + 1, remainder.length);
+                 } else {
+                     properties = parseCSSProperties(remainder.substring(0, end));
                         
-                     rule.setStyle(properties)
+                     rule.setStyle(properties);
                      
                      // get the unparsed remainder of the CSS string
-                     remainder = remainder.substring(end + 1, string.length)
+                     remainder = remainder.substring(end + 1, string.length);
                  }
                  
                  // continue parsing the remainder of the CSS string
-                 parseBlocks(remainder, set)  
+                 parseBlocks(remainder, set);
                                  
                  // prepend this CSSRule to the cssRules array
                  set.unshift(rule); 
@@ -272,37 +271,37 @@ Use it responsibly and have fun! ;)
                 while(depth){      
                     switch (string.charAt(index)){
                         case "{": 
-                         depth++
+                         depth++;
                         break
 
                         case "}":
-                         depth--
+                         depth--;
                         break
                     }        
 
-                    index++
+                    index++;
                 } 
 
-                return (index - 1)
+                return (index - 1);
              }
              
          }
         
         function cascadeRules(rules){
             if (!rules){
-                throw new Error("CSSParser.cascadeRules(). No css rules available for cascade")
+                throw new Error("CSSParser.cascadeRules(). No css rules available for cascade");
             }         
             
             if (!rules.length){
-                return rules
+                return rules;
             }
             
-            var cascaded = [], temp = {}, selectors = []
+            var cascaded = [], temp = {}, selectors = [];
             
             rules.forEach(function(rule){ 
                 
                 if (rule.cssRules){
-                    rule.cssRules = cascadeRules(rule.cssRules)
+                    rule.cssRules = cascadeRules(rule.cssRules);
                 }
                 
                 // isDuplicate
@@ -310,60 +309,55 @@ Use it responsibly and have fun! ;)
 
                     // store this selector in the order that was matched
                     // we'll use this to sort rules after the cascade
-                    selectors.push(rule.selectorText)                        
+                    selectors.push(rule.selectorText);
                     
                     // create the reference for cascading into
-                    temp[rule.selectorText] = rule
+                    temp[rule.selectorText] = rule;
                 } 
                 else{
                     // cascade rules into the matching selector
-                    temp[rule.selectorText] = extend({}, temp[rule.selectorText], rule)
+                    temp[rule.selectorText] = extend({}, temp[rule.selectorText], rule);
                 }
-            }) 
+            });
            
             
             // expose cascaded rules in the order the parser got them
             selectors.forEach(function(selectorText){
-                cascaded.push(temp[selectorText])
-            }, this)                                        
+                cascaded.push(temp[selectorText]);
+            }, this);
 
             // cleanup
-            temp = null
-            selectors = null
+            temp = null;
+            selectors = null;
             
-            return cascaded
+            return cascaded;
         }
         
         function extend(target){  
-            var sources = Array.prototype.slice.call(arguments, 1) 
+            var sources = Array.prototype.slice.call(arguments, 1);
             sources.forEach(function(source){
                 for (var key in source){
                     
                     // prevent an infinite loop trying to merge parent rules
                     // TODO: grow a brain and do this more elegantly
                     if (key === "parentRule"){
-                        return
+                        return;
                     }  
                     
                     // is the property pointing to an object that's not falsy?
                     if (typeof target[key] === 'object' && target[key]){
-                         
-                         // dealing with an array?        
+                         // dealing with an array?
                          if (typeof target[key].slice === "function"){  
-                             
-                             target[key] = cascadeRules(target[key].concat(source[key])) 
-                         }  
-                         
+                             target[key] = cascadeRules(target[key].concat(source[key]));
+                         } else {
                          // dealing with an object
-                         else{        
-                             target[key] = extend({}, target[key], source[key])
+                             target[key] = extend({}, target[key], source[key]);
                          }
-                    }
-                    else{
-                        target[key] = source[key]
+                    } else {
+                        target[key] = source[key];
                     }
                 }
-            })
+            });
             
             return target;
         }
@@ -373,8 +367,8 @@ Use it responsibly and have fun! ;)
             
             parse: function(string){ 
                  // inline css text and remove comments
-                string = string.replace(/[\n\t]+/g, "").replace(/\/\*[\s\S]*?\*\//g,'').trim()
-                parseBlocks.call(this, string, this.cssRules)
+                string = string.replace(/[\n\t]+/g, "").replace(/\/\*[\s\S]*?\*\//g,'').trim();
+                parseBlocks.call(this, string, this.cssRules);
             },  
                                       
             /*
@@ -385,15 +379,12 @@ Use it responsibly and have fun! ;)
                 
             */
             parseCSSDeclaration: function(string){
-                var set = []   
-                
-                parseBlocks.call(this, string, set)
-                
+                var set = [];
+                parseBlocks.call(this, string, set);
                 if (set.length && set.length === 1){
-                    return set.pop()
-                }
-                else{
-                    return null
+                    return set.pop();
+                } else {
+                    return null;
                 }
             },
             
@@ -404,11 +395,11 @@ Use it responsibly and have fun! ;)
             cascade: function(rules){   
                 if (!rules || !rules.length){
                     // TODO: externalize this rule
-                    this.cssRules = cascadeRules.call(this, this.cssRules)
-                    return
+                    this.cssRules = cascadeRules.call(this, this.cssRules);
+                    return;
                 }          
                 
-                return cascadeRules.call(this, rules)
+                return cascadeRules.call(this, rules);
             }, 
 
             extractRegions: function () {
@@ -571,9 +562,8 @@ window.CSSRegions = (function(window, regions) {
                 el = currentFlow.DOMSource[i];
 //                console.dir(el.children);
                 childrenList = el.children;
-                while (childrenList.length) {
-                    sourceNodes.push(childrenList[0]);
-                    el.removeChild(childrenList[0]);
+                for (j = 0, m = childrenList.length; j < m; j++) {
+                    sourceNodes.push(childrenList[j]);
                 }
                 if (getComputedStyle(el).display !== "none") {
                     el.style.display = "none";
