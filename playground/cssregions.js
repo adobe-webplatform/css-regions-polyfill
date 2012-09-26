@@ -575,11 +575,11 @@ window.CSSRegions = (function(window, regions) {
             // Flow the source into regions
             // Check the display attribute value (none)
             for (i = 0, l = destinationNodes.length; i < l; i++) {
-                if (sourceNodes.length === 0) {
-                    break;
-                }
                 currentRegion = destinationNodes[i];
                 currentRegion.innerHTML = "";
+                if (sourceNodes.length === 0) {
+                    continue;
+                }
                 if (getComputedStyle(currentRegion).display !== "none") {
                     el = sourceNodes.shift();
                     // The last region gets all the remaining content
