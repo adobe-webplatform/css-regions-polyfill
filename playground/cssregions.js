@@ -482,13 +482,17 @@ Use it responsibly and have fun! ;)
 window.CSSRegions = (function(window, regions) {
     var CSSRegions = {};
 
+    if (Modernizr.regions) {
+        return;
+    }
+
     CSSRegions.doLayout = function(regions) {
         if (regions) {
             CSSRegions.regions = regions;
         } else {
             regions =  CSSRegions.regions || null;
         }
-        if (Object.getOwnPropertyNames(regions).length === 0) {
+        if (regions === null || Object.getOwnPropertyNames(regions).length === 0) {
             return;
         }
 //        console.dir(regions);
