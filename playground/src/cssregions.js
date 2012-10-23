@@ -33,6 +33,10 @@ building-block for experiments with unsupported CSS rules and properties.
 
 This experimental parser is not intended to fully comply with any CSS Standard.
 Use it responsibly and have fun! ;)
+
+CSS Regions support
+Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
+
 */
 
 !function(scope){  
