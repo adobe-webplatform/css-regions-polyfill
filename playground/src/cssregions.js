@@ -734,7 +734,7 @@ window.CSSRegions = (function(window, regions) {
             if (currentNode.nodeName === "#text") {
                 currentNode.data = removedContent[i];
             } else {
-                removedContent[i].addChild(currentNode);
+                removedContent[i].appendChild(currentNode);
             }
         }
     };
