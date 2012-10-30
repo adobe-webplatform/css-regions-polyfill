@@ -499,7 +499,6 @@ window.CSSRegions = (function(window, regions) {
         if (regions === null || Object.getOwnPropertyNames(regions).length === 0) {
             return;
         }
-//        console.dir(regions);
         flowContentIntoRegions(regions);
     };
 
@@ -542,28 +541,33 @@ window.CSSRegions = (function(window, regions) {
                      });
     };
 
-    var getNodesForFlow = function(currentFlow, sourceNodes) {
-        var i, l, el, childrenList;
+    var getNodesForFlow = function(currentFlow) {
+        var i, l, el,
+            sourceNodes = [];
         for (i = 0, l = currentFlow.DOMSource.length; i < l; i++) {
-            el = currentFlow.DOMSource[i];
-            childrenList = el.children;
-            for (j = 0, m = childrenList.length; j < m; j++) {
-                sourceNodes.push(childrenList[j]);
+            el = currentFlow.DOMSource[i].cloneNode(true);
+            sourceNodes.push(el);
+            if (el.style.display === "none") {
+                el.style.display = el["data-display"] || "";
             }
-            if (getComputedStyle(el).display !== "none") {
-                el.style.display = "none";
+            if (getComputedStyle(currentFlow.DOMSource[i]).display !== "none") {
+                currentFlow.DOMSource[i]["data-display"] = currentFlow.DOMSource[i].style.display;
+                currentFlow.DOMSource[i].style.display = "none";
             }
         }
+        return sourceNodes;
     };
 
-    var getRegionsForFlow = function(regions, destinationNodes) {
-        var i, l, el;
+    var getRegionsForFlow = function(regions) {
+        var i, l, el,
+            destinationNodes = [];
         for (i = 0, l = regions.length; i < l; i++) {
             el = regions[i];
             if (getComputedStyle(el).display !== "none") {
                 destinationNodes.push(el);
             }
         }
+        return destinationNodes;
     };
 
     // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
@@ -575,12 +579,10 @@ window.CSSRegions = (function(window, regions) {
         for (nameFlow in regions) {
             currentFlow = regions[nameFlow];
             // Build the source to be flown from the region names
-            sourceNodes = [];
-            getNodesForFlow(currentFlow, sourceNodes);
+            sourceNodes = getNodesForFlow(currentFlow);
 
             // Remove regions with display:none;
-            destinationNodes = [];
-            getRegionsForFlow(currentFlow.DOMRegions, destinationNodes);
+            destinationNodes = getRegionsForFlow(currentFlow.DOMRegions);
 
             // Flow the source into regions
             // Check the display attribute value (none)
