@@ -519,8 +519,7 @@ window.CSSRegions = (function(window, regions) {
     };
 
     var orderNodes = function(arrSelectors) {
-        var i, j, m, nodeIterator, currentNode, nodeList,
-            ret = [],
+        var i, j, m, nodeList,
             tmp = [],
             l = arrSelectors.length;
 
@@ -530,29 +529,21 @@ window.CSSRegions = (function(window, regions) {
                 tmp.push(nodeList[j]);
             }
         }
-        // createNodeIterator works in FF 3.5+, Chrome 1+, Opera 9+, Safari 3+, IE9+
-        // https://developer.mozilla.org/en-US/docs/DOM/Document.createNodeIterator
-        nodeIterator = document.createNodeIterator(
-                                document.body,
-                                NodeFilter.SHOW_ELEMENT,
-                                { acceptNode: function(node) {
-                                        if (tmp.indexOf(node) >= 0) {
-                                            return NodeFilter.FILTER_ACCEPT;
-                                        } else {
-                                            return NodeFilter.FILTER_SKIP;
-                                        }
-                                    }
-                                 },
-                                            false);
-        while (currentNode = nodeIterator.nextNode()) {
-            ret.push(currentNode);
-        }
-        return ret;
+        return getFilteredDOMElements(
+                    document.body,
+                    NodeFilter.SHOW_ELEMENT,
+                    { acceptNode: function(node) {
+                                if (tmp.indexOf(node) >= 0) {
+                                    return NodeFilter.FILTER_ACCEPT;
+                                } else {
+                                    return NodeFilter.FILTER_SKIP;
+                                }
+                            }
+                     });
     };
 
     var getNodesForFlow = function(currentFlow, sourceNodes) {
-        var i, l, el, childrenList,
-            ret = [];
+        var i, l, el, childrenList;
         for (i = 0, l = currentFlow.DOMSource.length; i < l; i++) {
             el = currentFlow.DOMSource[i];
             childrenList = el.children;
@@ -627,14 +618,14 @@ window.CSSRegions = (function(window, regions) {
     };
 
     /**
-     * Flows the elemContent into region. If the content to be consumed flows out of region,
+     * Adds the elemContent into region. If the content to be consumed overflows out of region,
      * it returns the overflow part as a DOM element.
      * @param elemContent
      * @param region
      * @return null or a DOM element
      */
     var addContentToRegion = function(elemContent, region) {
-        var nodeIterator, currentNode, i, l, arrString, txt, iMin, iMax, indexOverflowPoint,
+        var currentNode, i, l, arrString, txt, indexOverflowPoint,
             ret = null,
             nodes = [],
             removedContent = [],
@@ -644,24 +635,21 @@ window.CSSRegions = (function(window, regions) {
         // Oops it overflows. Can we split the content or is it a lost battle?
         if ( checkForOverflow(region) ) {
             region.removeChild(el);
-            // Find all the textNodes and img
-            nodeIterator = document.createNodeIterator(
-                                el,
-                                NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-                                { acceptNode: function(node) {
-                                        if (node.nodeName.toLowerCase() === 'img'
-                                                || node.nodeName.toLowerCase() === 'fig'
-                                                || (node.nodeName.toLowerCase() === '#text' && node.data.replace(/^\s+|\s+$/g,"") !== "")) {
-                                            return NodeFilter.FILTER_ACCEPT;
-                                        } else {
-                                            return NodeFilter.FILTER_SKIP;
-                                        }
+            // Find all the textNodes, IMG, and FIG
+            nodes = getFilteredDOMElements(
+                        el,
+                        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+                        { acceptNode: function(node) {
+                                    if (node.nodeName.toLowerCase() === 'img'
+                                            || node.nodeName.toLowerCase() === 'fig'
+                                            || (node.nodeName.toLowerCase() === '#text'
+                                                && node.data.replace(/^\s+|\s+$/g,"") !== "")) {
+                                        return NodeFilter.FILTER_ACCEPT;
+                                    } else {
+                                        return NodeFilter.FILTER_SKIP;
                                     }
-                                 },
-                                false);
-            while (currentNode = nodeIterator.nextNode()) {
-                nodes.push(currentNode);
-            }
+                                }
+                         });
             // If it is an image just quit. No way to split this between multiple regions.
             if (nodes.length === 1
                     && (nodes[0].nodeName.toLowerCase() === "img" || nodes[0].nodeName.toLowerCase() === "fig")) {
@@ -679,8 +667,7 @@ window.CSSRegions = (function(window, regions) {
                         currentNode.parentNode.removeChild(currentNode);
                     }
                     region.appendChild(el);
-                    // We found a node that triggers the overflow
-                    if ( !checkForOverflow(region) ) {
+                    if ( !checkForOverflow(region) ) {  // We found a node that triggers the overflow
                         indexOverflowPoint = i;
                         region.removeChild(el);
                         break;
@@ -688,50 +675,17 @@ window.CSSRegions = (function(window, regions) {
                     region.removeChild(el);
                 }
 
-                // We couldn't find a way to split the content
-                if (i < 0 ) {
+                if (i < 0 ) {   // We couldn't find a way to split the content
                     ret = elemContent;
-                } else {
-                    // Try splitting the TextNode content to fit in
+                } else {        // Try splitting the TextNode content to fit in
                     if (currentNode.nodeName === "#text") {
                         txt = removedContent[indexOverflowPoint].replace(/^\s+|\s+$/g,"");
                         arrString = txt.split(" ");
-                        iMin = 0;
-                        iMax = arrString.length - 1;
-
-                        while (iMax >= iMin) {
-                            l = iMin + Math.round((iMax - iMin) / 2);
-                            currentNode.data = buildText(arrString, 0, l-1);
-                            region.appendChild(el);
-                            if ( checkForOverflow(region) ) {
-                                iMax =  l - 1;
-                            } else {
-                                iMin = l + 1;
-                            }
-                            region.removeChild(el);
-                        }
+                        l = findMaxIndex(region, el, currentNode, arrString);
                         removedContent[indexOverflowPoint] = buildText(arrString, l, arrString.length - 1);
                     }
                     region.appendChild(el.cloneNode(true));
-
-                    // Delete the content that was added to the current region
-                    for (i = 0; i < indexOverflowPoint; i++) {
-                        currentNode = nodes[i];
-                        if (currentNode.nodeName === "#text") {
-                            currentNode.data = "";
-                        } else {
-                            currentNode.parentNode.removeChild(currentNode);
-                        }
-                    }
-                    // Put back the leftovers to be fitted in the next region
-                    for (i = indexOverflowPoint, l = nodes.length; i < l; i++) {
-                        currentNode = nodes[i];
-                        if (currentNode.nodeName === "#text") {
-                            currentNode.data = removedContent[i];
-                        } else {
-                            removedContent[i].addChild(currentNode);
-                        }
-                    }
+                    assembleUnusedContent(indexOverflowPoint, nodes, removedContent);
                     ret = el;
                 }
             }
@@ -739,12 +693,75 @@ window.CSSRegions = (function(window, regions) {
         return ret;
     };
 
-    var buildText = function(arr, i, l) {
-        var txt = "";
-        for (;  i <= l; i++) {
-            txt += arr[i] + " ";
+    var findMaxIndex = function(region, el, currentNode, arrString) {
+        var l = 0,
+            iMin = 0,
+            iMax = arrString.length - 1;
+
+        while (iMax >= iMin) {
+            l = iMin + Math.round((iMax - iMin) / 2);
+            currentNode.data = buildText(arrString, 0, l-1);
+            region.appendChild(el);
+            if ( checkForOverflow(region) ) {
+                iMax =  l - 1;
+                if (iMax < iMin) {
+                    iMin = iMax;
+                }
+            } else {
+                iMin = l + 1;
+            }
+            region.removeChild(el);
         }
-        return txt;
+        return l;
+    };
+
+    var assembleUnusedContent = function(indexOverflowPoint, nodes, removedContent) {
+        var currentNode, i, l;
+        // Delete the content that was already consumed by the current region
+        for (i = 0; i < indexOverflowPoint; i++) {
+            currentNode = nodes[i];
+            if (currentNode.nodeName === "#text") {
+                currentNode.data = "";
+            } else {
+                currentNode.parentNode.removeChild(currentNode);
+            }
+        }
+        // Put back the leftovers not consumed by the current region
+        for (i = indexOverflowPoint, l = nodes.length; i < l; i++) {
+            currentNode = nodes[i];
+            if (currentNode.nodeName === "#text") {
+                currentNode.data = removedContent[i];
+            } else {
+                removedContent[i].addChild(currentNode);
+            }
+        }
+    };
+
+    var getFilteredDOMElements = function(root, whatElements, condition) {
+        var nodeIterator, currentNode,
+                nodes = [];
+        // createNodeIterator works in FF 3.5+, Chrome 1+, Opera 9+, Safari 3+, IE9+
+        // https://developer.mozilla.org/en-US/docs/DOM/Document.createNodeIterator
+        nodeIterator = document.createNodeIterator(
+                            root,
+                            whatElements,
+                            condition,
+                            false);
+        while (currentNode = nodeIterator.nextNode()) {
+            nodes.push(currentNode);
+        }
+        return nodes;
+    };
+
+    /**
+     *
+     * @param arr string array
+     * @param i start index
+     * @param l end intex
+     * @return {String}
+     */
+    var buildText = function(arr, i, l) {
+        return arr.slice(i, l+1).join(" ") + " ";
     };
 
     /**
