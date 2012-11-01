@@ -323,8 +323,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                     temp[rule.selectorText] = extend({}, temp[rule.selectorText], rule);
                 }
             });
-           
-            
+
             // expose cascaded rules in the order the parser got them
             selectors.forEach(function(selectorText){
                 cascaded.push(temp[selectorText]);
@@ -490,6 +489,11 @@ window.CSSRegions = (function(window, regions) {
         return;
     }
 
+    /**
+     * This is the method that does all the magic.
+     * If you want to trigger the layout from JS, then call CSS.doLayout().
+     * @param regions
+     */
     CSSRegions.doLayout = function(regions) {
         if (regions) {
             CSSRegions.regions = regions;
@@ -502,7 +506,11 @@ window.CSSRegions = (function(window, regions) {
         flowContentIntoRegions(regions);
     };
 
-    var findDOMOrderForRegions = function(regions) {
+    /**
+     * Orders the elements used for the name flows and regions
+     * @param regions
+     */
+    var findDOMOrderForNameFlowsAndRegions = function(regions) {
         var nameFlow, currentRegion;
         for (nameFlow in regions) {
             currentRegion = regions[nameFlow];
@@ -517,6 +525,11 @@ window.CSSRegions = (function(window, regions) {
         }
     };
 
+    /**
+     * Returns the nodes ordered by their DOM order
+     * @param arrSelectors
+     * @return {Array}
+     */
     var orderNodes = function(arrSelectors) {
         var i, j, m, nodeList,
             tmp = [],
@@ -541,6 +554,11 @@ window.CSSRegions = (function(window, regions) {
                      });
     };
 
+    /**
+     * Returns an array of elements that will be used as the source
+     * @param currentFlow
+     * @return {Array}
+     */
     var getNodesForFlow = function(currentFlow) {
         var i, l, el,
             sourceNodes = [];
@@ -558,6 +576,11 @@ window.CSSRegions = (function(window, regions) {
         return sourceNodes;
     };
 
+    /**
+     * Returns an array of elements that forms the regions. If an element is hidden (display:none) it is excluded.
+     * @param regions
+     * @return {Array}
+     */
     var getRegionsForFlow = function(regions) {
         var i, l, el,
             destinationNodes = [];
@@ -571,10 +594,15 @@ window.CSSRegions = (function(window, regions) {
     };
 
     // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
+    /**
+     * This is where the regions parsed by the CSS parser are actually put to used.
+     * For each region rule we flow the content.
+     * @param regions
+     */
     var flowContentIntoRegions = function(regions) {
         var nameFlow, currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el;
 
-        findDOMOrderForRegions(regions);
+        findDOMOrderForNameFlowsAndRegions(regions);
 
         for (nameFlow in regions) {
             currentFlow = regions[nameFlow];
@@ -695,6 +723,14 @@ window.CSSRegions = (function(window, regions) {
         return ret;
     };
 
+    /**
+     * Finds the max index that allows adding text from arrString to the el without overflowing the container.
+     * @param region
+     * @param el
+     * @param currentNode
+     * @param arrString
+     * @return {Number}
+     */
     var findMaxIndex = function(region, el, currentNode, arrString) {
         var l = 0,
             iMin = 0,
@@ -717,6 +753,12 @@ window.CSSRegions = (function(window, regions) {
         return l;
     };
 
+    /**
+     * Puts back the content removed in order to fit the parent element in the current region
+     * @param indexOverflowPoint
+     * @param nodes
+     * @param removedContent
+     */
     var assembleUnusedContent = function(indexOverflowPoint, nodes, removedContent) {
         var currentNode, i, l;
         // Delete the content that was already consumed by the current region
@@ -739,16 +781,20 @@ window.CSSRegions = (function(window, regions) {
         }
     };
 
+    /**
+     * Returns an array of elements that are children of the root parameter and satisfy the whatElements and condition
+     * filtering options
+     * @param root
+     * @param whatElements
+     * @param condition
+     * @return {Array}
+     */
     var getFilteredDOMElements = function(root, whatElements, condition) {
         var nodeIterator, currentNode,
                 nodes = [];
         // createNodeIterator works in FF 3.5+, Chrome 1+, Opera 9+, Safari 3+, IE9+
         // https://developer.mozilla.org/en-US/docs/DOM/Document.createNodeIterator
-        nodeIterator = document.createNodeIterator(
-                            root,
-                            whatElements,
-                            condition,
-                            false);
+        nodeIterator = document.createNodeIterator(root, whatElements, condition, false);
         while (currentNode = nodeIterator.nextNode()) {
             nodes.push(currentNode);
         }
@@ -756,7 +802,7 @@ window.CSSRegions = (function(window, regions) {
     };
 
     /**
-     *
+     * Returns a string built by joining the arr elements between the i & l indexes
      * @param arr string array
      * @param i start index
      * @param l end intex
@@ -781,10 +827,6 @@ window.CSSRegions = (function(window, regions) {
         el.style.overflow = curOverflow;
         return isOverflowing;
     };
-
-    var killWhiteSpace = function(str) {
-        return str.replace(/\s/g, "");
-    }
 
     window.addEventListener("resize", function(e) {
         CSSRegions.doLayout();
