@@ -484,13 +484,39 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
  *
  */
 window.CSSRegions = (function(window, regions) {
-    var CSSRegions = {};
-
     if (Modernizr.regions) {
         return;
     }
+    
+    var polyfill = {               
 
-    CSSRegions.doLayout = function(regions) {
+        // Collection of named flow CSS rules with information about nodes to collect
+        // This information will be used to identify DOM nodes
+        // @see polyfill.addRule()
+        namedFlowRules: [],
+
+        // map of NamedFlow objects. NamedFlow identifier is the key, NamedFlow instance is the value
+        namedFlows: {}
+    };  
+    
+    /*
+        Add a named flow CSS rule that contains
+        - identifier of the named flow
+        - selectors array of the content to be collected into the flow
+        - selectors array of the elements to become regions
+        
+        @Example
+        rule = {
+            identifier: "myFlow",
+            contentNodesSelectors: ["#source-content", "#aside-content"],
+            regionChainSelectors: [".myregion"] 
+        }
+    */
+    polyfill.addRule = function(rule){
+        polyfill.namedFlowRules.push(rule)
+    }
+
+    polyfill.doLayout = function(regions) {
         if (regions) {
             CSSRegions.regions = regions;
         } else {
@@ -787,10 +813,10 @@ window.CSSRegions = (function(window, regions) {
     }
 
     window.addEventListener("resize", function(e) {
-        CSSRegions.doLayout();
+        polyfill.doLayout();
     });
 
-    return CSSRegions;
+    return polyfill;
 
 })(window);
 
