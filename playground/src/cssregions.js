@@ -555,21 +555,21 @@ window.CSSRegions = (function(window, regions) {
 
     /**
      * Returns an array of elements that will be used as the source
-     * @param currentFlow
+     * @param DOMSource
      * @return {Array}
      */
-    var getNodesForFlow = function(currentFlow) {
+    var getNodesForFlow = function(DOMSource) {
         var i, l, el,
             sourceNodes = [];
-        for (i = 0, l = currentFlow.DOMSource.length; i < l; i++) {
-            el = currentFlow.DOMSource[i].cloneNode(true);
+        for (i = 0, l = DOMSource.length; i < l; i++) {
+            el = DOMSource[i].cloneNode(true);
             sourceNodes.push(el);
             if (el.style.display === "none") {
                 el.style.display = el["data-display"] || "";
             }
-            if (getComputedStyle(currentFlow.DOMSource[i]).display !== "none") {
-                currentFlow.DOMSource[i]["data-display"] = currentFlow.DOMSource[i].style.display;
-                currentFlow.DOMSource[i].style.display = "none";
+            if (getComputedStyle(DOMSource[i]).display !== "none") {
+               DOMSource[i]["data-display"] = DOMSource[i].style.display;
+               DOMSource[i].style.display = "none";
             }
         }
         return sourceNodes;
@@ -606,13 +606,11 @@ window.CSSRegions = (function(window, regions) {
         for (nameFlow in regions) {
             currentFlow = regions[nameFlow];
             // Build the source to be flown from the region names
-            sourceNodes = getNodesForFlow(currentFlow);
-
+            sourceNodes = getNodesForFlow(currentFlow.DOMSource);
             // Remove regions with display:none;
             destinationNodes = getRegionsForFlow(currentFlow.DOMRegions);
 
             // Flow the source into regions
-            // Check the display attribute value (none)
             for (i = 0, l = destinationNodes.length; i < l; i++) {
                 currentRegion = destinationNodes[i];
                 currentRegion.innerHTML = "";
@@ -621,6 +619,7 @@ window.CSSRegions = (function(window, regions) {
                 if (sourceNodes.length === 0) {
                     continue;
                 }
+                // Don't use regions with display attribute value (none)
                 if (getComputedStyle(currentRegion).display !== "none") {
                     el = sourceNodes.shift();
                     // The last region gets all the remaining content
@@ -633,7 +632,7 @@ window.CSSRegions = (function(window, regions) {
                         while (el) {
                             el = addContentToRegion(el, currentRegion);
                             if (el) {
-                                // The current regions if filled, time to move to the next one.
+                                // If current region is filled, time to move to the next one
                                 sourceNodes.unshift(el);
                                 break;
                             } else {
