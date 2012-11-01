@@ -462,7 +462,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             }
 
             // parse the rules and look for "flow-into" and "flow-from" rules;
-            regions = parser.extractRegions();
+            var regions = parser.extractRegions();
             // If there are CSS regions move the content from named flows into region chains
             CSSRegions.doLayout(regions);
         }
