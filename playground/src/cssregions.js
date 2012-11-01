@@ -478,8 +478,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
  * This is the object responsible for parsing the regions extracted by CSSParser.
  * Retrieves the DOM elements that formed the named flows and regions chains.
  * Flows the content into the region chain.
- * Listens for changes: region chains size or visibility changes and re-flows
- * the content.
+ * Listens for changes window resize events.
  *
  */
 window.CSSRegions = (function(window, regions) {
