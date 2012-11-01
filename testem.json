@@ -1,0 +1,10 @@
+{ 
+    "launch_in_dev" : [
+        "chrome"
+    ],
+    "src_files" : [
+        "playground/modernizr.custom.regions.js",
+        "playground/src/cssregions.js",
+        "test/*.js"
+    ]
+}
