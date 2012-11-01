@@ -404,45 +404,39 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                 }          
                 
                 return cascadeRules.call(this, rules);
-            }, 
-
-            extractRegions: function () {
-                var style, property, value,
-                    l = this.cssRules.length,
-                    regions = {};
-
-                for (var i = 0; i < l; i++) {
-                    style = this.cssRules[i].style;
-                    for (property in style) {
-                        if (property.indexOf("flow-") !== -1) {
-                            value = style[property];
-                            regions[value] = regions[value] || {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []};
-                            if (property.indexOf("flow-into") !== -1) {
-                                regions[value]["namedFlows"].push(this.cssRules[i].selectorText);
-                            } else {
-                                regions[value]["regionChains"].push(this.cssRules[i].selectorText);
-                            }
-                            break;
-                        }
-                    }
-                }
-                return regions;
             },
 
             doExtend: extend
         }
     }
 
-    function init(e) {
-        scope.removeEventListener("load", init);
+    scope = scope || window;
+    scope["CSSParser"] = CSSParser;
+       
+}(window);
 
-        if (!Modernizr) {
-            throw new Error("Modernizr is not loaded!");
-        }
+/**
+ * This is the object responsible for parsing the regions extracted by CSSParser.
+ * Retrieves the DOM elements that formed the named flows and regions chains.
+ * Flows the content into the region chain.
+ * Listens for changes: region chains size or visibility changes and re-flows
+ * the content.
+ *
+ */
+window.CSSRegions = function(scope) {
+    
+    function Polyfill(){
+        // Collection of named flow CSS rules with information about nodes to collect
+        // This information will be used to identify DOM nodes
+        // @see polyfill.addRule()
+        this.namedFlowRules = [],
 
-        // There is no CSS Regions support
-        if (!Modernizr.regions) {
-            console.log("CSS Regions is not supported");
+        // map of NamedFlow objects. NamedFlow identifier is the key, NamedFlow instance is the value
+        this.namedFlows = {}  
+    }
+    
+    Polyfill.prototype = {
+        init: function() {
             if (!document.styleSheets.length) {
                 console.log("No CSS rules defined!");
                 return;
@@ -460,73 +454,71 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             if (parser.cssRules.length === 0) {
                 console.log("There is no inline CSS for CSS Regions!");
                 return;
-            }
+            }                        
 
             // parse the rules and look for "flow-into" and "flow-from" rules;
-            regions = parser.extractRegions();
+            var rules = this.getNamedFlowRules(parser.cssRules);   
+                             
+            for (var rule in rules){
+                this.addRule(rules[rule])
+            }    
+
             // If there are CSS regions move the content from named flows into region chains
-            CSSRegions.doLayout(regions);
-        }
-    }
-
-    scope = scope || window;
-    scope["CSSParser"] = CSSParser;
-    scope.addEventListener("load", init);
-       
-}(window);
-
-/**
- * This is the object responsible for parsing the regions extracted by CSSParser.
- * Retrieves the DOM elements that formed the named flows and regions chains.
- * Flows the content into the region chain.
- * Listens for changes: region chains size or visibility changes and re-flows
- * the content.
- *
- */
-window.CSSRegions = (function(window, regions) {
-    if (Modernizr.regions) {
-        return;
-    }
-    
-    var polyfill = {               
-
-        // Collection of named flow CSS rules with information about nodes to collect
-        // This information will be used to identify DOM nodes
-        // @see polyfill.addRule()
-        namedFlowRules: [],
-
-        // map of NamedFlow objects. NamedFlow identifier is the key, NamedFlow instance is the value
-        namedFlows: {}
-    };  
-    
-    /*
-        Add a named flow CSS rule that contains
-        - identifier of the named flow
-        - selectors array of the content to be collected into the flow
-        - selectors array of the elements to become regions
+            this.doLayout();
+        },
         
-        @Example
-        rule = {
-            identifier: "myFlow",
-            contentNodesSelectors: ["#source-content", "#aside-content"],
-            regionChainSelectors: [".myregion"] 
-        }
-    */
-    polyfill.addRule = function(rule){
-        polyfill.namedFlowRules.push(rule)
-    }
+        getNamedFlowRules: function(cssRules) {
+            var rule, property, value,
+                l = cssRules.length,
+                rules = {};
 
-    polyfill.doLayout = function(regions) {
-        if (regions) {
-            CSSRegions.regions = regions;
-        } else {
-            regions =  CSSRegions.regions || null;
+            for (var i = 0; i < l; i++) {
+                rule = cssRules[i];
+                for (property in rule.style) {
+                    if (property.indexOf("flow-") !== -1) {
+                        value = rule.style[property];
+                        rules[value] = rules[value] || {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []};
+                        if (property.indexOf("flow-into") !== -1) {
+                            rules[value]["namedFlows"].push(rule.selectorText);
+                        } else {
+                            rules[value]["regionChains"].push(rule.selectorText);
+                        }
+                        break;
+                    }
+                }
+            } 
+
+            return rules;        
+        },
+        
+        /*
+            Add a named flow CSS rule that contains
+            - identifier of the named flow
+            - selectors array of the content to be collected into the flow
+            - selectors array of the elements to become regions
+
+            @Example
+            rule = {
+                identifier: "myFlow",
+                contentNodesSelectors: ["#source-content", "#aside-content"],
+                regionChainSelectors: [".myregion"] 
+            }
+        */
+        addRule: function(rule){
+            this.namedFlowRules.push(rule)
+        },
+        
+        doLayout: function() {
+            console.log(this.namedFlowRules)          
+
+            if (!this.namedFlowRules || !this.namedFlowRules.length){
+                console.warn("No named flow / regions CSS rules")
+                return
+            }                           
+            
+            flowContentIntoRegions(this.namedFlowRules);
         }
-        if (regions === null || Object.getOwnPropertyNames(regions).length === 0) {
-            return;
-        }
-        flowContentIntoRegions(regions);
-    };
+    }
 
     var findDOMOrderForRegions = function(regions) {
         var nameFlow, currentRegion;
@@ -810,13 +802,25 @@ window.CSSRegions = (function(window, regions) {
 
     var killWhiteSpace = function(str) {
         return str.replace(/\s/g, "");
+    }   
+      
+    var polyfill
+    
+    if (!Modernizr) {
+        throw new Error("Modernizr is not loaded!");
     }
 
-    window.addEventListener("resize", function(e) {
-        polyfill.doLayout();
-    });
+    if (Modernizr.regions) {
+        return
+    }
+    else{
+        polyfill = new Polyfill;
 
+        scope.addEventListener("load", function(){ polyfill.init() });
+        scope.addEventListener("resize", function(){ polyfill.doLayout() })
+    }
+    
     return polyfill;
 
-})(window);
+}(window);
 
