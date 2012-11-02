@@ -476,21 +476,29 @@ Unless otherwise noted, code and content is licensed under a <a rel="license" hr
             regionSelector: ".region"    
         },
         doLayout = _.debounce(function(){
-            var flow = getNamedFlow(conf.flow),
-                pages = getAllPages(),
-                lastPage = pages.pop();
+            var page, regions,
+                    flow = getNamedFlow(conf.flow),
+                    pages = getAllPages(),
+                    lastPage = pages.pop();
 
             if (isFlowOverset(flow)){
-                // duplicate the DOM nodes of the last page
-                lastPage = lastPage.parentNode.appendChild(lastPage.cloneNode(true));
                 // add lastPage to regions
                 if (CSSRegions) {
-                    CSSRegions.addRegionToNamedFlow(conf.flow, lastPage);
+                    page = lastPage.cloneNode(true);
+                    lastPage.parentNode.appendChild(page);
+                    regions = page.children;
+                    Array.prototype.forEach.call(regions, function(elem){
+                        elem.innerHTML = "";
+                        CSSRegions.addRegionToNamedFlow(conf.flow, elem);
+                    });
                     CSSRegions.doLayout();
+                } else {
+                    // duplicate the DOM nodes of the last page
+                    lastPage = lastPage.parentNode.appendChild(lastPage.cloneNode(true));
                 }
             } else{
-                var counter = 0,
-                    regions = lastPage.querySelectorAll(conf.regionSelector);
+                var counter = 0;
+                regions = lastPage.querySelectorAll(conf.regionSelector);
 
                 Array.prototype.forEach.call(regions, function(region){
                     // increment counter if the region is empty
@@ -502,7 +510,10 @@ Unless otherwise noted, code and content is licensed under a <a rel="license" hr
                     lastPage.parentNode.removeChild(lastPage);
                     // add lastPage to regions
                     if (CSSRegions) {
-                        CSSRegions.removeRegionFromNamedFlow(conf.flow, lastPage);
+                        regions = lastPage.children;
+                        Array.prototype.forEach.call(regions, function(elem){
+                            CSSRegions.removeRegionFromNamedFlow(conf.flow, elem);
+                        });
                         CSSRegions.doLayout();
                     }
                 }
