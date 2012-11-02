@@ -429,10 +429,10 @@ window.CSSRegions = function(scope) {
         // Collection of named flow CSS rules with information about nodes to collect
         // This information will be used to identify DOM nodes
         // @see polyfill.addRule()
-        this.namedFlowRules = [],
+        this.namedFlowRules = [];
 
         // map of NamedFlow objects. NamedFlow identifier is the key, NamedFlow instance is the value
-        this.namedFlows = {}  
+        this.namedFlows = {};  
     }
     
     Polyfill.prototype = {
@@ -505,12 +505,12 @@ window.CSSRegions = function(scope) {
             }
         */
         addRule: function(rule){
-            this.namedFlowRules.push(rule)
+            this.namedFlowRules.push(rule);
         },
         
         doLayout: function() {
             if (!this.namedFlowRules || !this.namedFlowRules.length){
-                console.warn("No named flow / regions CSS rules")
+                console.warn("No named flow / regions CSS rules");
                 return
             }                           
             
@@ -802,7 +802,7 @@ window.CSSRegions = function(scope) {
         return str.replace(/\s/g, "");
     }   
       
-    var polyfill
+    var polyfill;
     
     if (!Modernizr) {
         throw new Error("Modernizr is not loaded!");
@@ -815,7 +815,7 @@ window.CSSRegions = function(scope) {
         polyfill = new Polyfill;
 
         scope.addEventListener("load", function(){ polyfill.init() });
-        scope.addEventListener("resize", function(){ polyfill.doLayout() })
+        scope.addEventListener("resize", function(){ polyfill.doLayout() });
     }
     
     return polyfill;
