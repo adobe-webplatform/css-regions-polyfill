@@ -1,10 +1,8 @@
-{ 
+{               
     "launch_in_dev" : [
-        "chrome"
+        "chrome",
+        "safari",
+        "firefox"
     ],
-    "src_files" : [
-        "playground/modernizr.custom.regions.js",
-        "playground/src/cssregions.js",
-        "test/*.js"
-    ]
+    "test_page" : "test/index.html"
 }
