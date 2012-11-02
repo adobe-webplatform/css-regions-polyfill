@@ -555,21 +555,21 @@ window.CSSRegions = (function(window, regions) {
 
     /**
      * Returns an array of elements that will be used as the source
-     * @param DOMSource
+     * @param namedFlows
      * @return {Array}
      */
-    var getNodesForFlow = function(DOMSource) {
+    var getNodesForFlow = function(sourceElements) {
         var i, l, el,
             sourceNodes = [];
-        for (i = 0, l = DOMSource.length; i < l; i++) {
-            el = DOMSource[i].cloneNode(true);
+        for (i = 0, l = sourceElements.length; i < l; i++) {
+            el = sourceElements[i].cloneNode(true);
             sourceNodes.push(el);
             if (el.style.display === "none") {
                 el.style.display = el["data-display"] || "";
             }
-            if (getComputedStyle(DOMSource[i]).display !== "none") {
-               DOMSource[i]["data-display"] = DOMSource[i].style.display;
-               DOMSource[i].style.display = "none";
+            if (getComputedStyle(sourceElements[i]).display !== "none") {
+                sourceElements[i]["data-display"] = sourceElements[i].style.display;
+                sourceElements[i].style.display = "none";
             }
         }
         return sourceNodes;

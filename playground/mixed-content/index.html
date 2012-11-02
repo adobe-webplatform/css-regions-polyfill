@@ -1,0 +1,102 @@
+<!--
+Copyright (C) 2012 Adobe Systems, Incorporated. All rights reserved.
+
+Unless otherwise noted, the code and content of these samples is
+licensed under a Public Domain License
+
+http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset='UTF-8'>
+    <title>Mixed Content Example</title>
+
+    <script src="../modernizr.custom.regions.js"></script>
+    <script src="../src/cssregions.js"></script>
+    <script src="../scripts/test.js"></script>
+
+    <style>
+        body {
+            width: 80%;
+            margin: 50px 10% 10%;
+            font-family: Palatino, Georgia, serif;
+            background-color: white;
+        }
+
+        #source {
+            -webkit-flow-into: article;
+            -ms-flow-into: article;
+            clear: both;
+        }
+
+        .myregions {
+            -webkit-flow-from: article;
+            -ms-flow-from: article;
+            float: left;
+            width: 25%;
+            min-width: 200px;
+            margin: 0px 20px 20px;
+            padding: 7px;
+            background-color: #dedede;
+            height: auto;
+        }
+
+        .region-small-height {
+            height: 400px;
+        }
+
+        p {
+            line-height: 1.6em;
+        }
+        img {
+            width:100%;
+            max-width: 300px;
+        }
+        .notes {
+            font-style: italic;
+        }
+        p.cssregions, p.no-cssregions { display: none; }
+        .cssregions-test p.cssregions { color: green; display: block; }
+        .no-cssregions-test p.no-cssregions { color: red; display: block; }
+    </style>
+</head>
+<body>
+<div>
+    <h1>Mixed Content Example</h1>
+    <p class="cssregions">Your browser supports CSS regions.</p>
+    <p class="no-cssregions">Your browser does not support CSS regions.</p>
+    <p>In this example the content to be flown is composed of both TextNodes and IMGs.</p>
+    <article>
+        <div class="myregions region-small-height"></div>
+        <div class="myregions region-small-height"></div>
+        <div class="myregions"></div>
+    </article>
+</div>
+<div id="source">
+    <h2>Forbidden City</h2>
+    <p>
+        The Forbidden City was the Chinese imperial palace from the Ming Dynasty to the end of the Qing Dynasty. It is located in the middle of Beijing, China, and now houses the Palace Museum. For almost 500 years, it served as the home of emperors and their households, as well as the ceremonial and political center of Chinese government.
+    </p>
+    <p>
+        <img src="pic-0.jpg">
+    </p>
+    <p>
+        Built in 1406 to 1420, the complex consists of 980 buildings and covers 720,000 m2 (7,800,000 sq ft).[1] The palace complex <a href="http://en.wikipedia.org/wiki/Chinese_architecture">exemplifies traditional Chinese palatial architecture</a>,[2] and has influenced cultural and architectural developments in East Asia and elsewhere. The Forbidden City was declared a World Heritage Site in 1987,[2] and is listed by UNESCO as the largest collection of preserved ancient wooden structures in the world.
+    </p>
+    <p>
+        <img src="pic-1.jpg">
+    </p>
+    <p>
+        Since 1925, the Forbidden City has been under the charge of the Palace Museum, whose extensive collection of artwork and artifacts were built upon the imperial collections of the Ming and Qing dynasties.
+    </p>
+    <p>
+        <img src="pic-2.jpg">
+    </p>
+    <p class="notes">
+        Notes: This text is from <a href="http://en.wikipedia.org/wiki/Forbidden_City">Wikipedia</a>. Pictures taken by me.
+    </p>
+</div>
+
+</body>
+</html>
