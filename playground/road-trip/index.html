@@ -1,0 +1,155 @@
+<!--
+Copyright (C) 2012 Adobe Systems, Incorporated. All rights reserved.
+
+The contents of this package are subject to various licenses. 
+You will find the license information either directly in the files 
+or the directory will contain the appropriate license for the components of that directory.
+ 
+Unless otherwise noted, code and content is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>CSS Regions - Demo Viewer</title>
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <link rel="stylesheet" type="text/css" href="css/viewer.css" media="all" /> 
+</head>
+<body>  
+    
+    <form id="tools">
+        <label>                                                 
+            <input type="radio" name="aspect" value="desktop" />
+            <span>Desktop</span>
+        </label>
+        
+        <label>                                                 
+            <input type="radio" name="aspect" value="xoom" checked />
+            <span>Xoom</span>
+        </label> 
+        
+        <label>                                                 
+            <input type="radio" name="aspect" value="ipad" />
+            <span>iPad</span>
+        </label> 
+        
+        <label>                                                 
+            <input type="radio" name="aspect" value="iphone" />
+            <span>iPhone</span>
+        </label> 
+        
+        <fieldset>
+            <label>                                                 
+                <input type="radio" name="orientation" value="portrait" />
+                <span>Portrait</span>
+            </label>
+            <label>                                                 
+                <input type="radio" name="orientation" value="landscape" checked />
+                <span>Landscape</span>
+            </label>
+        </fieldset> 
+    </form> 
+    
+    <iframe id="viewport" frameborder="0" src="road-trip.html"></iframe>
+             
+    <script type="text/javascript">
+
+    (function(){                      
+       var viewport = document.querySelector("#viewport"),                
+           db = window.localStorage["road-trip-settings"],
+           settings = db? JSON.parse(db) : {}             
+
+       function saveSettings(settings){
+           window.localStorage["road-trip-settings"] = JSON.stringify(settings)
+       }
+           
+       function setViewportAspect(value){
+           viewport.setAttribute("data-aspect", value) 
+       }
+       
+       function setViewportOrientation(value){
+           viewport.setAttribute("data-orientation", value)
+       }
+       
+       function fitToScreen(){
+           var scale = 1,
+               windowHeight = window.innerHeight,
+               windowWidth = window.innerWidth,
+               viewportStyle = window.getComputedStyle(viewport, null),
+               viewportHeight = parseInt(viewportStyle.height, 10),
+               viewportWidth = parseInt(viewportStyle.width, 10)
+                        
+           // does the viewport fit in the visible area of the window?
+           if (windowHeight < viewportHeight){             
+               
+               // scale to 95% of the window
+               scale = windowHeight / viewportHeight * 0.95
+           }       
+           
+           if (windowWidth < viewportWidth * scale){    
+               scale =  windowWidth / (viewportWidth * scale)
+               viewport.style['-webkit-transform-origin'] = 'left center'
+           } 
+           else{
+               viewport.style['-webkit-transform-origin'] = 'center center'
+           }
+                                  
+           // scale the viewport to fit the window
+           viewport.style['-webkit-transform'] = 'scale('+ scale +')'
+       }
+       
+       // switch viewport based on user selection
+       document.querySelector("#tools").addEventListener("change", function(e){ 
+           switch(e.target.name){
+               case "aspect":
+                 setViewportAspect(e.target.value)
+                 settings.aspect = e.target.value 
+                 saveSettings(settings)
+               break;
+               
+               case "orientation":
+                 setViewportOrientation(e.target.value)
+                 settings.orientation = e.target.value
+                 saveSettings(settings)
+               break;     
+           } 
+           
+           
+           viewport.focus()
+       })        
+       
+       document.addEventListener("DOMContentReady", function(e){
+           viewport.focus()
+       })
+       
+       // Make sure the viewport fits the screen
+       viewport.addEventListener("webkitTransitionEnd", function(e){
+           switch(e.propertyName){
+               case "height":  
+                   fitToScreen()
+               break
+           }
+       })  
+       
+       if (settings.aspect){
+           setViewportAspect(settings.aspect)
+           document.querySelector("[name='aspect'][value='"+ settings.aspect +"']").setAttribute("checked","")
+       }
+       else{
+           // set viewport based on selected value
+           setViewportAspect(document.querySelector("[name='aspect']:checked").value);
+       }  
+       
+       if (settings.orientation){
+           setViewportOrientation(settings.orientation)
+           document.querySelector("[name='orientation'][value='"+ settings.orientation +"']").setAttribute("checked","")
+       }
+       else{
+           // set viewport based on selected value
+           setViewportOrientation(document.querySelector("[name='orientation']:checked").value);
+       }          
+        
+    })()
+    </script>
+</body>
+</html>

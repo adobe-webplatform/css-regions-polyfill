@@ -1,0 +1,81 @@
+/*     
+Copyright (C) 2012 Adobe Systems, Incorporated. All rights reserved.
+
+The contents of this package are subject to various licenses. 
+You will find the license information either directly in the files 
+or the directory will contain the appropriate license for the components of that directory.
+ 
+Unless otherwise noted, code and content is licensed under a 
+<a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.
+*/
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+  background: url(../thirdparty/images/black_linen_v2.png) top left repeat; }
+
+#tools {
+  background: #d0d0d0;
+  position: absolute;
+  right: 0;
+  padding: 5px 10px;
+  color: #444;
+  font-family: Helvetica;
+  font-size: 0.9em;
+  z-index: 99;
+  opacity: 0;
+  -webkit-transition: opacity 0.2s ease-in-out;
+  -moz-transition: opacity 0.2s ease-in-out;
+  -ms-transition: opacity 0.2s ease-in-out;
+  -o-transition: opacity 0.2s ease-in-out;
+  transition: opacity 0.2s ease-in-out; }
+  #tools label {
+    cursor: pointer; }
+  #tools input[type='range'] {
+    vertical-align: top; }
+  #tools:hover {
+    opacity: 1; }
+
+fieldset {
+  display: inline; }
+
+[data-aspect="desktop"] {
+  width: 100%;
+  height: 100%; }
+
+[data-aspect="xoom"] {
+  width: 1280px;
+  height: 670px; }
+  [data-aspect="xoom"][data-orientation="portrait"] {
+    width: 670px;
+    height: 1280px; }
+
+[data-aspect="iphone"] {
+  width: 480px;
+  height: 320px; }
+  [data-aspect="iphone"][data-orientation="portrait"] {
+    width: 320px;
+    height: 480px; }
+
+[data-aspect="ipad"] {
+  width: 1024px;
+  height: 768px; }
+  [data-aspect="ipad"][data-orientation="portrait"] {
+    width: 768px;
+    height: 1024px; }
+
+#viewport {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: auto auto;
+  -webkit-transition: all 0.2s ease-in-out;
+  -moz-transition: all 0.2s ease-in-out;
+  -ms-transition: all 0.2s ease-in-out;
+  -o-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+  background: white;
+  box-shadow: 0px 0px 10px 2px black; }

@@ -1,0 +1,12 @@
+h1 {
+  font-family: 'myriad-pro', Helvetica, Arial, sans-serif;
+  font-size: 5em;
+  font-weight: 900;
+  letter-spacing: -5px; }
+
+blockquote:nth-of-type(2) {
+  font-size: 2.6em;
+  font-family: 'myriad-pro-condensed', Arial, sans-serif;
+  font-weight: lighter;
+  color: #ae805e;
+  line-height: 1em; }

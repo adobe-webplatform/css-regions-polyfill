@@ -602,6 +602,7 @@ window.CSSRegions = (function(window, regions) {
         var nameFlow, currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el;
 
         findDOMOrderForNameFlowsAndRegions(regions);
+        addCSSOMAPI(regions);
 
         for (nameFlow in regions) {
             currentFlow = regions[nameFlow];
@@ -610,6 +611,9 @@ window.CSSRegions = (function(window, regions) {
             // Remove regions with display:none;
             destinationNodes = getRegionsForFlow(currentFlow.DOMRegions);
 
+            document.getNamedFlows().namedItem(nameFlow).overset = false;
+            document.webkitGetNamedFlows().namedItem(nameFlow).overset = false
+
             // Flow the source into regions
             for (i = 0, l = destinationNodes.length; i < l; i++) {
                 currentRegion = destinationNodes[i];
@@ -617,6 +621,8 @@ window.CSSRegions = (function(window, regions) {
                 // We still have to clear the possible content for the remaining regions
                 // even when we don;t have anymore content to flow.
                 if (sourceNodes.length === 0) {
+                    currentRegion.webKitRegionOverset = "empty";
+                    currentRegion.regionOverset = "empty";
                     continue;
                 }
                 // Don't use regions with display attribute value (none)
@@ -627,6 +633,14 @@ window.CSSRegions = (function(window, regions) {
                         while (el) {
                             currentRegion.appendChild(el.cloneNode(true));
                             el = sourceNodes.shift();
+                        }
+                        // Check if it overflows
+                        if (checkForOverflow(currentRegion)) {
+                            document.getNamedFlows().namedItem(nameFlow).overset = true;
+                            currentRegion.webKitRegionOverset = "overset";
+                            currentRegion.regionOverset = "overset";
+                            document.getNamedFlows().namedItem(nameFlow).overset = true;
+                            document.webkitGetNamedFlows().namedItem(nameFlow).overset = true;
                         }
                     } else {
                         while (el) {
@@ -639,9 +653,12 @@ window.CSSRegions = (function(window, regions) {
                                 el = sourceNodes.shift();
                             }
                         }
+                        currentRegion.webKitRegionOverset = "fit";
+                        currentRegion.regionOverset = "fit";
                     }
                 }
             }
+            // Dispatch regionLayoutUpdate event document.getNamedFlows().namedItem(nameFlow).
         }
     };
 
@@ -808,6 +825,68 @@ window.CSSRegions = (function(window, regions) {
      */
     var buildText = function(arr, i, l) {
         return arr.slice(i, l+1).join(" ") + " ";
+    };
+
+    var addCSSOMAPI = function(regions) {
+        var f, nameFlow,
+            obj = {},
+            arr = [];
+
+        for (nameFlow in regions) {
+            obj[nameFlow] = {name: nameFlow, overset: false};
+            arr.push(obj[nameFlow]);
+        }
+
+        f = function () {
+            var ret = {namedItem: null, item: null};
+
+            ret.namedItem = function(name) {
+                if (obj[name]) {
+                    return obj[name];
+                } else {
+                    return null;
+                }
+            };
+
+            ret.item = function(index) {
+              if (arr.length > index && index > 0){
+                return arr[index];
+              } else {
+                return null;
+              }
+            };
+
+            return ret;
+        };
+
+        document.getNamedFlows = f;
+        document.webkitGetNamedFlows = f;
+    };
+
+    // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
+    CSSRegions.addRegionToNamedFlow = function(flowName, elem) {
+        var regions;
+        if (!CSSRegions.regions) {
+            return;
+        }
+        regions = this.regions;
+        if (regions[flowName]) {
+            regions[flowName].DOMRegions.push(elem);
+        }
+    };
+
+    CSSRegions.removeRegionFromNamedFlow = function(flowName, elem) {
+        var regions, i;
+        if (!CSSRegions.regions) {
+            return;
+        }
+        regions = this.regions;
+        if (regions[flowName]) {
+            i = regions[flowName].DOMRegions.indexOf(elem);
+            if (i >= 0) {
+                regions[flowName].DOMRegions.splice(i, 1);
+            }
+        }
     };
 
     /**
