@@ -1,0 +1,8 @@
+{               
+    "launch_in_dev" : [
+        "chrome",
+        "safari",
+        "firefox"
+    ],
+    "test_page" : "test/index.html"
+}
