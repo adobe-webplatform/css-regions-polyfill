@@ -636,7 +636,6 @@ window.CSSRegions = (function(window, regions) {
                         }
                         // Check if it overflows
                         if (checkForOverflow(currentRegion)) {
-                            document.getNamedFlows().namedItem(nameFlow).overset = true;
                             currentRegion.webKitRegionOverset = "overset";
                             currentRegion.regionOverset = "overset";
                             document.getNamedFlows().namedItem(nameFlow).overset = true;
@@ -658,7 +657,17 @@ window.CSSRegions = (function(window, regions) {
                     }
                 }
             }
-            // Dispatch regionLayoutUpdate event document.getNamedFlows().namedItem(nameFlow).
+            fireRegionLayoutUpdateEvents(nameFlow);
+        }
+    };
+
+    // Dispatch regionLayoutUpdate event document.getNamedFlows().namedItem(nameFlow)
+    var fireRegionLayoutUpdateEvents = function(nameFlow) {
+        var nf, e;
+        nf = namedFlows.obj[nameFlow];
+        if (nf) {
+            e = {type: "regionLayoutUpdate", target: nf};
+            nf.fire(e);
         }
     };
 
@@ -827,30 +836,36 @@ window.CSSRegions = (function(window, regions) {
         return arr.slice(i, l+1).join(" ") + " ";
     };
 
-    var addCSSOMAPI = function(regions) {
-        var f, nameFlow,
-            obj = {},
-            arr = [];
+    var namedFlows;
 
-        for (nameFlow in regions) {
-            obj[nameFlow] = {name: nameFlow, overset: false};
-            arr.push(obj[nameFlow]);
+    var addCSSOMAPI = function(regions) {
+        var f, nameFlow, o;
+
+        if (!namedFlows) {
+            namedFlows = {obj: {}, arr: []};
+            for (nameFlow in regions) {
+                o = buildNamedFlow(nameFlow);
+                namedFlows.obj[nameFlow] = o;
+                namedFlows.arr.push(o);
+            }
+        } else {
+            return;
         }
 
         f = function () {
             var ret = {namedItem: null, item: null};
 
             ret.namedItem = function(name) {
-                if (obj[name]) {
-                    return obj[name];
+                if (namedFlows.obj[name]) {
+                    return namedFlows.obj[name];
                 } else {
                     return null;
                 }
             };
 
             ret.item = function(index) {
-              if (arr.length > index && index > 0){
-                return arr[index];
+              if (namedFlows.arr.length > index && index > 0){
+                return namedFlows.arr[index];
               } else {
                 return null;
               }
@@ -861,6 +876,10 @@ window.CSSRegions = (function(window, regions) {
 
         document.getNamedFlows = f;
         document.webkitGetNamedFlows = f;
+    };
+
+    var buildNamedFlow = function(nameFlow) {
+        return new NamedFlow(nameFlow, false);
     };
 
     // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
@@ -908,6 +927,52 @@ window.CSSRegions = (function(window, regions) {
     window.addEventListener("resize", function(e) {
         CSSRegions.doLayout();
     });
+
+
+    var EventManager = function() {
+        this._listeners = {};
+    };
+    EventManager.prototype = {
+        constructor: EventManager,
+
+        addEventListener: function(type, listener) {
+            if (!this._listeners[type]) {
+              this._listeners[type] = [];
+            }
+            this._listeners[type].push(listener);
+            CSSRegions.doLayout();
+        },
+
+        fire: function(event) {
+            var listeners, i, l;
+            if (this._listeners[event.type] instanceof Array){
+                listeners = this._listeners[event.type];
+                for (i = 0, l = listeners.length; i < l; i++){
+                    listeners[i].call(this, event);
+                }
+            }
+        },
+
+        removeEventListener: function(type, listener) {
+            var listeners, i, l;
+            if (this._listeners[type] instanceof Array) {
+                listeners = this._listeners[type];
+                for (i = 0, l = listeners.length; i < l; i++){
+                    if (listeners[i] === listener){
+                        listeners.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+        }
+    };
+
+    function NamedFlow(nameFlow, overset) {
+        this.name = nameFlow;
+        this.overset = overset;
+    };
+    NamedFlow.prototype = new EventManager();
+    NamedFlow.prototype.constructor = NamedFlow;
 
     return CSSRegions;
 
