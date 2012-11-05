@@ -668,6 +668,8 @@ window.CSSRegions = (function(window, regions) {
         if (nf) {
             e = {type: "regionLayoutUpdate", target: nf};
             nf.fire(e);
+            e = {type: "webkitRegionLayoutUpdate", target: nf};
+            nf.fire(e);
         }
     };
 

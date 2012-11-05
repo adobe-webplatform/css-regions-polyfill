@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>Human Legacy Project</title>
+
+        <style>
+            html {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            .title {
+                font-size: 6em;
+                text-align: center;
+            }
+
+            .dropcap {
+                font-size: 3em;
+                float: left;
+                line-height: 1em; 
+                padding: 0 4px 0 0;
+            }
+
+            p {
+                line-height: 1.5em;
+                margin: 0;
+                -webkit-hyphens: auto;
+            }
+
+            p + p {
+                text-indent: 1.75em;
+            }
+
+            .hr {
+                font-size: 2em;
+                text-align: center;
+                padding: 20px 0 20px 0;
+            }
+
+            #content {
+                -webkit-flow-into: story;
+                font-family: Palatino;
+                text-align: justify;
+            }
+
+            .region {
+                overflow: hidden;
+                padding-left: 20px;
+                padding-right: 10px;
+                -webkit-box-sizing: border-box;
+                -webkit-flow-from: story;
+                background-repeat: no-repeat;
+                background-position: center;
+                background-size: contain;
+            }
+
+            .box_a {padding: 25px 15px 25px 25px;}
+            .box_b {padding: 25px 15px 0    15px;}
+            .box_c {padding: 0    0    0    15px;}
+            .box_d {padding: 0    15px 25px 15px;}
+            .box_e {padding: 25px 15px 0    15px;}
+            .box_f {padding: 0    15px 0    0;}
+            .box_g {padding: 0    15px 25px 15px;}
+            .box_h {padding: 25px 25px 25px 15px;}
+
+            .pull_quote_box {
+                background-image: url(fist_light.svg);
+                background-repeat: no-repeat;
+                background-position: center bottom;
+                background-size: contain;
+                font-size: 2em;
+                font-style: italic;
+            }
+
+            .pull_quote_text_box {
+                -webkit-box-sizing: border-box;
+                width: inherit;
+                height: inherit;
+                padding: 20px;
+            }
+
+            .page_number {
+                padding-bottom: 5px;
+                text-align: center;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                font-size: .8em;
+                color: #555;
+            }
+
+            #pageCountLabel {
+                position: absolute;
+                top: 5px;
+                right: 5px;
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+                font-size: .75em;
+                color: #fff;
+            }
+
+            #viewport {
+                position: absolute;
+                top: 0px;
+                right: 0px;
+                bottom: 0px;
+                left: 0px;
+                overflow: hidden;
+            }
+
+            .tweenable {
+                -webkit-transition-property: left, right;
+                -webkit-transition-duration: .33s;
+                -webkit-transition-timing-function: ease-in, ease-out;
+            }
+
+        </style>
+
+        <script src="../modernizr.custom.regions.js"></script>
+        <script src="../src/cssregions.js"></script>
+        <script type="text/javascript">
+
+            var winW, winH, colW,
+                lastColPosition,
+                scrollPosition,
+                pullQuotes,
+                pageCount,
+                defaultPullQuoteSize = 1,
+                story;
+
+            function init() {
+                window.addEventListener("resize", doLayout);
+                window.addEventListener("keydown", onKeyDown);
+                var namedFlows = document.webkitGetNamedFlows();
+                story = namedFlows.namedItem("story");
+                doLayout();
+            }
+
+            function onMainFlowUpdate(e) {
+                var story = e.target;
+                if (story.overset) {
+                    addPage();
+                } else {
+                    story.removeEventListener("webkitRegionLayoutUpdate", onMainFlowUpdate);
+                    addPullQuotes();
+                }                
+            }
+
+            function doLayout() {
+                story.addEventListener("webkitRegionLayoutUpdate", onMainFlowUpdate);
+                // First, remove the pull-quote styles.
+                var pqStyles = document.getElementsByClassName("pq_style");
+                var head = document.getElementsByTagName("head")[0];
+                for (var i = 0; i < pqStyles.length; ++i) {
+                    head.removeChild(pqStyles[i]);
+                }
+
+                // Now clear out the viewport.
+                var vp = document.getElementById("viewport");
+
+                while (vp.hasChildNodes()) {
+                    vp.removeChild(vp.firstChild);
+                }
+
+                // Reset and re-measure.
+                pageCount = 0;
+
+                winW = window.innerWidth;
+                winH = window.innerHeight;
+
+                colW = Math.floor(winW / 4);
+
+                lastColPosition = (colW) * -1;
+
+                if (scrollPosition != 0) {
+                    scrollPosition = 0;
+                    scrollViewport();
+                }
+
+                document.getElementById("storyTitle").style.fontSize = (colW/85)+"em";
+
+                addPage();
+            }
+
+            function onKeyDown(event) {
+                if (event.keyCode == 39) { // right
+                    scrollForward();
+                } else if (event.keyCode == 37) { // left
+                    scrollBack();
+                } else if (event.keyCode == 27) { // esc
+                    toggleRegionBorders();
+                }
+            }
+
+            function toggleRegionBorders() {
+                var head = document.getElementsByTagName("head")[0];
+                var style = document.getElementById("region_border");
+                if (style) {
+                    head.removeChild(style);
+                } else {
+                    style = document.createElement("style");
+                    style.setAttribute("id", "region_border");
+                    style.innerHTML = ".region {border: 1px solid blue;}\n";
+                    style.innerHTML += ".box_a {background-image: url(numbers/1.svg);}\n";
+                    style.innerHTML += ".box_b {background-image: url(numbers/2.svg);}\n";
+                    style.innerHTML += ".box_c {background-image: url(numbers/3.svg);}\n";
+                    style.innerHTML += ".box_d {background-image: url(numbers/4.svg);}\n";
+                    style.innerHTML += ".box_e {background-image: url(numbers/5.svg);}\n";
+                    style.innerHTML += ".box_f {background-image: url(numbers/6.svg);}\n";
+                    style.innerHTML += ".box_g {background-image: url(numbers/7.svg);}\n";
+                    style.innerHTML += ".box_h {background-image: url(numbers/8.svg);}";
+                    head.appendChild(style);
+                }
+            }
+
+            function scrollForward() {
+                var isLastColShowing = ((Math.abs(scrollPosition)) < lastColPosition && ((Math.abs(scrollPosition) + (winW*1)) > lastColPosition));
+                if (isLastColShowing) return;
+                scrollPosition -= winW;
+                scrollViewport();
+            }
+
+            function scrollBack() {
+                if (scrollPosition == 0) return;
+                scrollPosition += winW;
+                scrollViewport();
+            }
+
+            function scrollViewport() {
+                vp = document.getElementById("viewport");
+                vp.style.left = scrollPosition + "px";
+            }
+
+            function getBox(width, height, left, top, cssClass) {
+                var box = document.createElement("div");
+                box.setAttribute("class", cssClass);
+                var pageWidth = ((left) + (pageCount * winW));
+                box.setAttribute("style", "position:absolute;width:" + Math.round(width) + "px;height:" + Math.round(height) + "px;top:" + Math.round(top) + "px;left:" + Math.round(pageWidth) + "px;");
+                lastColPosition = pageWidth;
+
+                return box;
+            }
+
+            function addPage() {
+                var vp = document.getElementById("viewport");
+
+                var box_a = getBox(colW, winH, 0, 0, "region box_a");
+                vp.appendChild(box_a);
+
+                var box_b = getBox(colW, winH / 3, colW, 0, "region box_b");
+                vp.appendChild(box_b);
+
+                var box_c = getBox( winW / 8 , winH / 3, colW, winH / 3, "region box_c");
+                vp.appendChild(box_c);
+
+                var box_d = getBox(colW, winH / 3, colW, (winH - (winH / 3)), "region box_d");
+                vp.appendChild(box_d);
+
+                var box_e = getBox(colW, winH / 3, winW / 2, 0, "region box_e");
+                vp.appendChild(box_e);
+
+                var box_f = getBox( winW / 8, winH / 3, winW * .625, winH / 3, "region box_f");
+                vp.appendChild(box_f);
+
+                var box_g = getBox( colW, winH / 3, winW / 2, (winH - (winH / 3)), "region box_g");
+                vp.appendChild(box_g);
+
+                var box_h = getBox( colW, winH, (winW - (winW  / 4)), 0, "region box_h");
+                vp.appendChild(box_h);
+
+                var pq = getBox( colW, winH / 3, (winW - (winW * .625)), winH / 3, "pull_quote_box");
+                var pqText = document.createElement("div");
+                pqText.setAttribute("class", "pull_quote_text_box");
+                pqText.style.webkitFlowFrom = "pq_" + pageCount;
+                pqText.setAttribute("id", "pq_box_" + pageCount);
+                pq.appendChild(pqText);
+                vp.appendChild(pq);
+
+                var pageNumber = document.createElement("div");
+                pageNumber.setAttribute("class", "page_number");
+                pageNumber.setAttribute("style", "position:absolute;width:"+winW+"px;left:"+(winW*pageCount)+"px;bottom:0px;");
+                pageNumber.innerHTML = pageCount + 1;
+                vp.appendChild(pageNumber);
+
+                ++pageCount;
+            }
+
+            function addPullQuotes() {
+                var pqs = document.getElementsByClassName("pull_quote");
+                var currentSibling = null;
+                for (var i = 0; i < pqs.length; ++i) {
+                    var pq = pqs[i];
+                    var region = story.getRegionsByContent(pq);
+                    for (var sibling = region[0].nextSibling;
+                         sibling.getAttribute("class") !== "pull_quote_box";
+                         sibling = sibling.nextSibling) {}
+                    if(sibling == currentSibling) continue;
+                    currentSibling = sibling;
+
+                    var pullQuoteBoxId = sibling.firstChild.getAttribute("id");
+                    var index = pullQuoteBoxId.substring(pullQuoteBoxId.lastIndexOf("_") + 1, pullQuoteBoxId.length);
+
+                    document.getElementsByTagName("head")[0].appendChild(getPQStyle(index, defaultPullQuoteSize));
+
+                    var quote = document.createElement("div");
+                    quote.setAttribute("id", "pq_text_" + index)
+                    quote.style.webkitFlowInto = sibling.firstChild.style["-webkit-flow-from"];
+                    quote.innerHTML = pq.innerText;
+                    var namedFlows = document.webkitGetNamedFlows();
+                    var region = namedFlows.namedItem("pq_"+index);
+                    region.addEventListener("webkitRegionLayoutUpdate", adjustPullQuoteFontSize);
+                    document.getElementById("viewport").appendChild(quote);
+                }
+            }
+
+            function getPQStyle(index, fontSize) {
+                var pqStyle = document.createElement("style");
+                pqStyle.setAttribute("id", "pq_style_" + index);
+                pqStyle.setAttribute("class", "pq_style");
+                var styleText = "#pq_text_" + index + " {-webkit-flow-into:pq_"+index+";";
+                styleText += "font-size:"+fontSize+"em;";
+                styleText += "font-style:italic;";
+                styleText += "text-align:center;";
+                pqStyle.innerHTML = styleText;
+                return pqStyle;
+            }
+
+            function adjustPullQuoteFontSize(event) {
+                var namedFlow = event.target;
+                if (!namedFlow.overset) {
+                    changePullQuoteStyle(namedFlow, .1);
+                } else  {
+                    namedFlow.removeEventListener("webkitRegionLayoutUpdate", adjustPullQuoteFontSize);
+                    changePullQuoteStyle(namedFlow, -.1);
+                }
+            }
+
+            function changePullQuoteStyle(namedFlow, delta) {
+                var index = namedFlow.name.substring(namedFlow.name.lastIndexOf("_") + 1, namedFlow.name.length);
+                var regionId = "pq_box_" + index;
+                var region = document.getElementById(regionId);
+                var style = document.getElementById("pq_style_"+index);
+                var styleHTML = style.innerHTML;
+                var fontSize = styleHTML.match(/font-size:(\d+(\.\d)?)em/)[1];
+                var newFontSize = Math.round((parseFloat(fontSize) + delta) * 10) / 10;
+                var newStyle = getPQStyle(index, newFontSize);
+                var head = document.getElementsByTagName("head")[0];
+                head.removeChild(style);
+                head.appendChild(newStyle);
+            }
+
+            if (CSSRegions) {
+                setTimeout(function() {init()}, 1000);
+            } else {
+                window.onload = init;
+            }
+
+        </script>
+    </head>
+<body>
+
+<div id="viewport" class="tweenable"></div>
+
+<div id="content">
+<div class="title" id="storyTitle">HUMAN LEGACY PROJECT</div>
+<p><span class="dropcap">W</span>e almost never meet in person anymore. It&#8217;s far too dangerous. If they were watching just one of us, it could mean the end of the entire project. Almost half a century of work would be gone in the time it took to pull a trigger or laser-paint the building for an air strike.</p>
+<p>But there are times when we have to take the risk. The project operates almost entirely autonomously now, but sometimes it needs our help. If we have the skills it needs, we take care of it. If we don&#8217;t, we recruit. If we need more money than what we have, we find ways to get it. Computers provide the automation, but humans provide the ingenuity. <span class="pull_quote">We never know when we&#8217;re going to be needed, where we&#8217;re going to meet, or what we&#8217;re going to be asked to do.</span> We make no attempt to contact each other while we wait. The project contacts us.</p>
+<p>This time it happens through my handset. Handsets are issued by the government to ensure that everything you do is tracked. There are underground rooms of supercomputers that search for patterns in the data collected through handsets: conversations, messages, photographs, purchases, locations, background noises. Possibly even molecules &#8220;sniffed&#8221; through some of the newer models. <span class="pull_quote">It&#8217;s illegal to tamper with your handset or to leave your apartment without it.</span> It doesn&#8217;t have an off button. Your handset is your identification, your lifeline, your link to the People&#8217;s Party and their link to you. It&#8217;s for your own protection.</p>
+<p>But it&#8217;s just a piece of hardware like any other piece of hardware, and just like any machine that blindly executes whatever instructions it&#8217;s handed, it can be hacked. In this case, the ability to inject bytecode is made possible by the addition of a $2 mod chip. It still uses the federal networks, but it uses them in ways that the People&#8217;s Police can&#8217;t see. Networks inside of networks, protocols on top of protocols. Our darknet uses nondeterministic encryption algorithms that are programmed to evolve. If we weren&#8217;t already on the inside, we wouldn&#8217;t even know how to crack them.</p>
+<p>The meeting is tomorrow evening at the National Pride Museum, of all places. I guess the theory is that it&#8217;s better to know you&#8217;re being watched than to have to wonder. And it&#8217;s not a building that the PP is likely to destroy. We&#8217;re supposed to meet between work and curfew, a transitional period when a minimal amount of chaos is tolerated. We can&#8217;t do it any earlier because if we all miss work at the same time, that ties us together. We might get away with it once, but probably not a second time, and certainly not again after that. You have to watch out for patterns. Anything you do from which a pattern can be established will eventually end up flagged.</p>
+<p>It&#8217;s possible to meet after curfew if you know what you&#8217;re doing. <span class="pull_quote">Most people would consider an illegal gathering at night to be tantamount to suicide, and it is.</span> But that&#8217;s the point. It&#8217;s so stupid that the PP doesn&#8217;t expect anyone to try it. They let their guard down in subtle but exploitable ways. The PP gets tired, board, distracted, hungry, and horny just like everyone else. That&#8217;s when they slip up. We&#8217;ve met at night before and we&#8217;ll probably do it again, but not this soon. No patterns.</p>
+<p>I&#8217;ll have to leave for the museum directly from work. My office is far outside the city, but that&#8217;s good. The more movement on the way there, the better. I&#8217;ll take two trains and a bus, and then I&#8217;ll take a long, leisurely stroll through the crowded streets. I&#8217;ll stop at a drugstore to get a drink. I&#8217;ll cross a street, go in the opposite direction, then walk around the block. It will take me over an hour to get where I&#8217;m going, but at least I&#8217;ll know that I got there alone. My handset will be in my front left pocket which is lined with an aluminized mylar mesh. My last reported location will be my office.</p>
+<p>I work for a company called Novelty Household Goods Co., Ltd. which, we are told, is headquartered in Xiamen, China. American and Chinese business is so tightly integrated now that it doesn&#8217;t matter who you work for. Our economies are almost indistinguishable. I&#8217;m a chemical engineer, but I&#8217;ve never done any actual engineering for NHG. I&#8217;m more of a researcher. Since all of our products are manufactured in Sierra Leone, it&#8217;s impossible for me to do any hands-on work. My job is to make sure that we&#8217;re using the cheapest materials and processes humanly possible. I have federal quotas I have to meet. Since incomes don&#8217;t go up, prices must come down. <span class="pull_quote">The illusion of wealth is one of the cornerstones of The Party.</span></p>
+<p>I&#8217;ve asked several times to go to Sierra Leone, but my requests are always denied. In the space marked &#8220;Reason For Travel,&#8221; I write that I can do my job better on-site, that I might be able to locate new manufacturing locations in western Africa that are closer to suppliers and/or natural resources which could lead to lower production costs. My manager tells me it&#8217;s the Federal Travel Commission that keeps rejecting the requests, not him. He urges me to stop trying. The real reason I want to go is because the project has people there I&#8217;d like to meet; the real reason I&#8217;m not allowed is that the government thinks I won&#8217;t come back.</p>
+<p>As far as the government is concerned, I&#8217;m a chemical engineer, but my real job is Technical Archivist for the Human Legacy Project. I joined the HLP over 20 years ago, before it was labeled a terrorist organization and banned. I was recruited during the transition from Phase One to Phase Two. The HLP had just started hollowing out a mountain in Ogden, Utah where they were building concrete bunkers for data storage. Since data formats were becoming obsolete every five to ten years, the HLP decided to create their own. That was the only way they could ensure there would always be hardware around that could read them. They had people building the drives, but what they needed was the physical storage media itself. That&#8217;s what I was hired to do: design titanium alloy platters capable of storing the entire legacy of the human race for no less than one thousand years.</p>
+<p>My title is still Technical Archivist, but my role changed when we went underground. I went from working on chemical etching to biomunitions. Biomunitions is the science of violently destabilizing organic compounds. Biomunitions is my legacy. <span class="pull_quote">I&#8217;m the man who figured how to turn humans into bombs.</span></p>
+
+<div class="hr">&sect;</div>
+
+<p><span class="dropcap">T</span>he origins of the Human Legacy Project can be traced back to the origins of humans themselves: the Omo River in southern Ethiopia.</p>
+<p>When the cost of manufacturing in China began to rise, an American anthropologist named Avia Denegal was the first to predict the industrialization of Sub-Saharan Africa, and hence the gradual extinction of dozens of nomadic tribes. In particular, she was interested in the people of the Lower Valley of the Omo called the Suri, Mursi, and the Me&#8217;en. There were no more federal research grants by then, so she sold everything she had and paid her own way to Kenya. From there, Avia traveled north with one of the last humanitarian groups still operating anywhere on the continent of Africa.</p>
+<p>Just past the Kenyan border, Avia thought she saw her first dead body: tight black skin stretched over a tiny skeleton beneath a cloud of flies, sprawled in the sparse shade of a clump of brush. Someone from the caravan jogged over and knelt beside the body, then looked up and motioned. They didn&#8217;t have time to stay with the boy until he regained his strength, so they brought him along. Avia was the only one without specific duties, so she volunteered to care for him. The doctor rode in the van with Avia and the little boy and frequently reminded her, with a grave and meaningful expression, not to get attached.</p>
+<p>But by the time they reached the small village near where the Omo river empties into Lake Turkana, not only was the boy eating, walking, and speaking, but he had already picked up several words of English. He stayed with Avia as the rest of the caravan continued north, and was even strong enough to help her with her equipment.</p>
+<p>The boy learned to speak English astonishingly quickly as well as the various Surmic languages spoken by the surrounding tribes. He became Avia&#8217;s translator, and he and Avia were welcomed into villages and clans up and down the river. The boy did not know how old he was, and prolonged malnutrition made it impossible to tell. Avia guessed that he was between six and nine years old. He explained to Avia that his parents became very cold one night, and when they went to sleep, they never woke up again. The boy liked the name of the river &mdash; <em>the Omo</em> &mdash; and told Avia that he was taking it as his new name. Omo Denegal.</p>
+<p>Avia taught Omo how to read and how to operate her equipment. <span class="pull_quote">He was as curious about the Surma people&#8217;s culture as Avia, and he would often conduct his own research.</span> He maintained his own files on Avia&#8217;s computer, and they read and commented on each other&#8217;s work. Omo was fascinated by the technology that Avia brought with her, and when the solar array she used to keep her equipment charged stopped functioning, he fixed it. Avia came back from washing her clothes in the river and found the device entirely disassembled and laid out on a tarp. Omo was cleaning each individual component with supplies from a first aid kit, and when he put it all back together, it functioned better than it had when it was new.</p>
+<p>Avia decided to leave Africa sooner than she had originally planned. It was difficult for her to admit to herself, but she had become more interested in Omo than in her research. Omo had consumed every article, paper, and piece of literature she had access to, and he had pushed her to her limitations in mathematics and other sciences. <span class="pull_quote">At night, he would ask her questions about the sky that she couldn&#8217;t answer.</span> Avia had never seen so much passion and potential in anyone, and she felt an obligation to help him pursue it. She had always believed that her gift to humanity would be her research &mdash; the preservation of dying cultures &mdash; but she now knew that the most important thing she had to give the world was Omo.</p>
+<p>The Ethiopian government was happy to let Avia take Omo out of the country. She had some money wired to a bank in Addis Ababa which helped her obtain the necessary documents and approval with no delay. But they didn&#8217;t leave right away; Avia decided to spend an additional few days in the city to help prepare Omo for the shock of New York City.</p>
+<p>Avia went back to teaching full-time at the university in order to pay for Omo&#8217;s home schooling. He had two separate teachers who shared the task of preparing him for college. Avia and Omo spent their weekends in museums or the library, and occasionally took short trips to Boston or Washington, DC to tour historical sites. Omo was reading an average of a book a day in one of three different languages in addition to keeping up with his schoolwork, auditing two college courses, and teaching his own online class in African Culture.</p>
+<p>As a young teenager, Omo was admitted to the university where Avia taught, and by his second year, he was teaching or advising as many courses as he was taking. He primarily studied anthropology, sociology, and mathematics. <span class="pull_quote">Omo enjoyed the university, but frequently complained to his mother that the curriculum did not do a good enough job of synthesizing disciplines.</span> Between his second and third year, Omo wrote a paper that described the process of plotting and quantifying cultural evolution and showed how it was possible to use mathematical formulas to model human behavior on a macro scale. He proved how his models accurately described cultures of the past and the present, and speculated that they could therefore be used to predict civilizations of the future. The paper was published in several journals and was so well received by the university that he was offered the opportunity to form and teach an entirely new class: Introduction to Cultural Mathematics.</p>
+<p>In his fourth year, Omo began focusing on astronomy, physics, cosmology, and astrobiology. In particular, he was interested in the possibility of combining physics and biology with cultural mathematics to enable not only predictions of the existence of extraterrestrial life, but to derive actual details of alien civilizations. He became obsessed with the Fermi paradox which states that given the age and vastness of the universe, it&#8217;s highly probable that there is a large number of technologically advanced species in our galaxy, yet despite extensive effort and research, we have never uncovered a single piece of credible evidence. Man has put observatories on the far side of the moon that can image extrasolar planets and see all the way back to the beginning of time, explored the depths of Jupiter&#8217;s ice moon with autonomous robotic submarines, detected all the subatomic particles that make up matter and define its quirky behavior, and derived a map of the entire universe using the radiation generated by the big bang, but nobody had ever seen or even detected a radio signal, probe, stray laser, or artifact of undisputed extraterrestrial origin.</p>
+<p>Omo began to research the Drake equation which attempts to predict the number of extraterrestrial civilizations in the Milky Way. He then integrated cultural mathematics to refine the equation such that it was able to predict the number of technologically advanced civilizations currently capable of receiving and sending radio or optical signals. Even his most conservative estimates put the number in the thousands. He captured his findings in a paper which was received enthusiastically by exobiologists, but was largely ignored by the rest of the scientific community. The university felt that it had been patient with Omo, but now requested that he shift the focus of his research back to more traditional scientific disciplines. Any paper or article containing the term &#8220;extraterrestrial&#8221; carried the very real danger of discredit and even ridicule &mdash; not just for the author, but for any institutions he or she may be affiliated with. Omo responded by leaving the university and accepting a position at the Institute for the Search for Extraterrestrial Intelligence, or SETI, in Mountain View, California. He was, in his own words, about to embark on the third and most profound phase of his life.</p>
+<p>He headed up a privately funded project called ROSA, or Radio and Optical Satellite Array. ROSA consisted of 16 identical satellites built by a small team of aerospace engineers essentially out of off-the-shelf components. <span class="pull_quote">NASA and the European Space Agency had been out of the business of manned space flight and exploration for many years which had given rise to a new industry of cheap commercial satellite delivery.</span> All 16 satellites were launched into orbit over the course of four days using a remote-controlled SSTO, or a single-stage-to-orbit vehicle, capable of taking off from a runway in the Mojave desert, launching itself into orbit using air-breathing engines, releasing a satellite from its cargo bay, and returning to the same runway from which it launched &mdash; all in less than an hour.</p>
+<p>ROSA was designed to detect incredibly minute narrow-bandwidth radio waves and pulses of photons as brief as a billionth of a second in duration from transmitters or laser beacons &mdash; telltale signs of extraterrestrial technology. They focused on 16 Earth-sized planets whose spectroscopic analysis confirmed the presence of oxygen, nitrogen, methane, and water, and who occupied the habitual zone of solar systems with relatively young Sun-sized stars at their hearts. The data gathered by the satellite array was transmitted back down to Earth where it was broken up into chunks suitable for distributed parallel pattern analysis. The chunks were placed into the PCC, or Public Computing Cloud, which was comprised of the combined processing power of billions of network-connected devices from supercomputers to hand-held devices to wristwatches.</p>
+<p><span class="pull_quote">After a full decade of tuning sensors and refining pattern recognition algorithms, the project had still failed to uncover even a single credible lead.</span> On the ten-year anniversary of the project, Omo submitted one last paper on the Fermi paradox before announcing that he was leaving the SETI Institute. The paper claimed that organisms which use natural selection to acquire the intelligence they need to create advanced technologies inevitably end up using that technology to compete with themselves through increasingly complex forms of warfare, genocide, despotism, and wealth distribution, thus diverting resources away from scientific research, exploration, and general social welfare. In order for any species to evolve rapidly enough to gain the intelligence needed to construct advanced technology, lifespans would necessarily be relatively short (as in the lifespan of a human, for instance, as opposed to an oak tree), and in order for a species to be able to embrace and build on technology, it would have to have incredibly adaptable neurological pathways. The combination of short life spans and psychological amenability tends to result in cultures which lose the ability to connect with their ancestors, and hence the ability to think beyond themselves and their own lifespans. The result is a form of both inter- and intra-species competition that inevitably leads to environmental, economic, and social decay.</p>
+<p>In short, the paper claimed, there is an inherent and self-imposed limitation on all intelligent organisms&#8217; potential.</p>
+<p>Omo&#8217;s paper was passionately debated among academics, and was even widely discussed (in abbreviated and simplified form) by the mainstream media. After Omo&#8217;s mother died and Omo moved back to New York, he was invited to address a panel of world leaders at a summit in Washington, DC. At the end of his talk, a representative from India stood up and asked the question Omo had been waiting for since the day the paper was published: how do we break out of our own cycle of destruction? <span class="pull_quote">That was when Omo officially announced the formation of the Human Legacy Project.</span></p>
+
+<div class="hr">&sect;</div>
+
+<p><span class="dropcap">T</span>he National Pride Museum is almost empty. The school buses have already pulled away and the tour guides are back behind the front desks, picking at their boxes of government rations and rolling their eyes at the security guards&#8217; advances. The museum is only open for another hour, so whatever it is that we are here to do, we&#8217;d better do it fast.</p>
+<p>I walk past the life-sized dioramas depicting salient events in US history: Christopher Columbus and his men selflessly bestowing the gift of fire upon a tribe of dumbstruck natives; American and British gentlemen in short pants and long coats shaking hands over the Declaration of Independence; a white man and an African immigrant working side-by-side in a cotton field while their wives gossip in the shade of the front porch, rocking and fanning themselves, a sweaty pitcher of lemonade between them; a Chinese engineer explaining the mystical inner workings of a Model T to a confused but attentive American engineer; a cosmonaut and an astronaut taking the first triumphant bounds across the surface of the moon together; a prominent balding party member balanced on one knee as he offers a warm plate of food to a dirty homeless child with one hand, and extends a handset to her grateful parents with the other. If you stop to read the fine print on the plaques, you&#8217;ll see that these scenes do not depict actual events, but are creative re-imaginings inspired by the modern peaceful global alliances we all enjoy. <span class="pull_quote">The tour guides do not read the fine print, and the fine print gets finer every year.</span></p>
+<p>The meeting is upstairs in the library. The opening into the room is wide, and there are no doors to close it off from the rest of the upstairs. The walls are lined with shelves of books that the People&#8217;s Party doesn&#8217;t mind you reading, and there are closed-circuit cameras looking down on the room from every corner. There are two long tables pushed together end-to-end in the center of the room, and the people sitting at them with their magazines and notebook computers don&#8217;t look up. I take the empty seat between Jakub, an information architect turned hacker, and my wife.</p>
+<p>Ex-wife, I should say. We divorced shortly after Mount Legacy was shut down &mdash; after we decided that living together made us an easy target. It was too hard not to say things to each other that we shouldn&#8217;t say, and not to spontaneously do stupid things that would draw attention. It was easier to be alone. There weren&#8217;t many of us left so we had to be smart, spread ourselves out, play the odds. All of us who were together eventually split up. The women accused the men of seeing prostitutes and we accused them of stealing money. Not that The Party cared. <span class="pull_quote">It was easier to get a divorce than it was to get a marriage license.</span></p>
+<p>I&#8217;m surprised to see that I&#8217;m not the last to arrive. Sasha still isn&#8217;t here. I saw someone walking along the wall scanning book titles when I came in, but it wasn&#8217;t him. We don&#8217;t have much time left, so we can&#8217;t wait. I put my notebook on the table and open it. The screen lights up, then dims as it adjusts to the ambient light in the room. I have to slouch down in my chair to see it clearly because the duel-layer LCD projects two distinct images: one straight ahead for me to see, and one at an upward angle for the cameras and anyone standing over my shoulder.</p>
+<p>I clear my throat and rub at my ear with my finger. That activates the audio. <span class="pull_quote">We are all wearing voice impulse sensors under our shirts which allow us to talk without speaking.</span> All you have to do is go through the motions of talking without actually saying anything and the VIS converts the muscular impulses into synthesized speech, then broadcasts it over an encrypted short range radio link to the tiny receivers in our ears. We&#8217;ve trained them so that the voices sound very close to our own. Even the inflections and accents aren&#8217;t bad.</p>
+<p>&#8220;Where&#8217;s Sasha?&#8221; I say. Nobody gives any indication that they heard me, but I know they did.</p>
+<p>&#8220;Nobody&#8217;s heard from him,&#8221; my wife says. She&#8217;s slowly turning the pages of a thick catalog. Rory is across the table from us with his notebook open and Yuuka is next to him reading a novel.</p>
+<p>Rory was arrested years ago, but was released because of connections he has through his twin brother. He&#8217;s an electronic surveillance expert who sells Bing Xiang refrigerators during the day. Yuuka is an expert in social surveillance. She is a call girl employed by party members with an Asian fetish, and she hears things that could never be heard any other way.</p>
+<p>&#8220;I have the instructions,&#8221; Jakub says. &#8220;Ready for this? We&#8217;re supposed to deorbit the satellites.&#8221;</p>
+<p>He transfers the instructions to me. I see a four-by-four grid of live video streams on my screen: 16 identical satellites, each filming the one beside it with its visual diagnostic camera. I&#8217;m waiting for someone to elaborate, but nobody does.</p>
+<p>&#8220;You mean destroy them?&#8221; I finally say.</p>
+<p>&#8220;It would certainly seem so,&#8221; Jakub says. Rory stretches and uses the opportunity to glance around the room.</p>
+<p>&#8220;That doesn&#8217;t make any sense,&#8221; I say. &#8220;Why would he want us to destroy the satellites?&#8221;</p>
+<p>&#8220;The only explanation,&#8221; Yuuka says, &#8220;is to keep the government from capturing them. It was always just a matter of time.&#8221;</p>
+<p>&#8220;But not yet,&#8221; I say. &#8220;There has to be something else. Something about transferring the data first. If we destroy them now, it&#8217;s all over.&#8221;</p>
+<p>&#8220;Maybe that&#8217;s the point,&#8221; my wife says. &#8220;Maybe it&#8217;s time for all this to be over.&#8221;</p>
+
+<div class="hr">&sect;</div>
+
+<p><span class="dropcap">T</span>he goal of the Human Legacy Project was to give everyone who wanted it the chance to live forever. <span class="pull_quote">Immortality was not achieved physically, the project taught, but through our influence on future generations.</span> The HLP was to take history out of the hands of historians (who had a tendency to simplify, dehumanize, embellish, forget, revise, censor, and, of course, flat-out lie), and put it into the hands of the people who were making it. By providing future generations with a free, detailed, tangible, and personal sense of the past, Omo believed humanity could finally begin to learn from and build on history rather than repeat it. He believed that the HLP could inspire us to move beyond the perceived limitations of the human race and become something more than what we ever thought we could be. <span class="pull_quote">The path to the future, Omo told his archivists, was hidden in the past, and the mission of the HLP was to reveal it.</span></p>
+<p>Omo tasked his archivists with the impossible: record the life stories of every living human being on the planet. Everyone&#8217;s life was important. Everyone mattered. Every single person had some vital insight or piece of knowledge that nobody else had. <span class="pull_quote">Every story had the potential to teach or inspire, and hence to change the world.</span></p>
+<p>The data was initially stored in the Library of Congress as part of their Digital Collections project. In developed nations, everyone was given free access to sets of tools for capturing their own life stories and the stories of their ancestors using whatever format or type of media they were most comfortable with. In less developed parts of the world, the HLP employed thousands of archivists to document as many lives as possible, from the wealthiest landowners and politicians to the poorest farmers and nomads. As the project became more widely publicized, volunteers from all over the world began assisting with the archival process. At its peak, the HLP had over half a million volunteers and employees worldwide.</p>
+<p>Omo&#8217;s job was logistics. He meticulously monitored political, cultural, and scientific events around the world, and fed them into computer models to help determine where and how to allocate resources. He moved more archivists across the border into Mexico when he saw that the collapse of the Mexican government was imminent under increasingly brutal attacks from drug cartels. When gravity-sensing satellites confirmed that India had only enough ground water left for roughly a decade of consumption, he mandated an aggressive recruiting campaign in Mumbai, Calcutta, Delhi, and Bangalore. As falling oil prices threatened to throw the economies of OPEC nations into turmoil, Omo moved archivists into the Middle East, Northern Africa, and South America to try to stay ahead of the wars and genocidal crusades his models predicted. And when thousands of nuclear power plants were brought online across North America and Western Europe, Omo doubled the advertising budgets of the London, Paris, Washington, DC, and Los Angeles offices; he had seen the soaring rates of cancer and the investigations into nuclear waste contractors long before the first child ever got sick.</p>
+<p><span class="pull_quote">Phase two of the Human Legacy Project began the day it was announced that, for the first time since 1820, a United States presidential candidate would run unopposed.</span> After the previous election brought the lowest voter turnout in US history, the People&#8217;s Party began to amass power and support at an unprecedented rate. It was clear, Omo explained in an organization-wide letter, that it was time to remove the archives from government control.</p>
+<p>The HLP had purchased an entire mountain in Ogden, Utah under the name Powder Valley Resort Holdings, LLC, and was already in the process of hollowing it out. Omo&#8217;s technical team began designing data formats, transfer protocols, high-speed optical drives, and corrosion-resistant storage media. The facility was powered by their own geothermal installations, and it was protected by a private security detail. The People&#8217;s Party condemned the construction of Mount Legacy and the transfer of data from the Library of Congress, insisting that such important historical assets were better off entrusted to the government than to a team of &#8220;volunteer housewives and armchair historians.&#8221; When the HLP continued to refuse to work with the federal government, the People&#8217;s Party shut down the entire Digital Collection project, hired their own archivists, and formed the Department of Human History. It took less than a year for material from DHH to become required curriculum in every public and private academic institution in the country.</p>
+<p><span class="pull_quote">Midway through The Party&#8217;s third term, the Human Legacy Project was declared a terrorist organization and officially banned.</span> The government accused the HLP of falsifying history, spreading misinformation about the United States government, harboring known criminals, and stockpiling weapons. Phase two of the HLP ended the morning the FBI and the Utah National Guard surrounded and stormed the facility at Mount Legacy.</p>
+<p>Omo was arrested, and what was left of the HLP went underground. It continued to operate as small, independent, decentralized cells, but its charter was no longer data collection and preservation. <span class="pull_quote">The consensus among the archivists was that the project had failed &mdash; that it was destroyed by the very thing it was supposed to prevent.</span> Information and knowledge, it turned out, had not been effective weapons. <span class="pull_quote">In the end, it was not enough to empower yourself if you weren&#8217;t also weakening your enemies.</span></p>
+<p>Targeting government facilities had been relatively easy at first. The concrete barriers along the streets were ineffective against high-powered, directed, and shrapnel-packed blasts, and motorbikes could be used to simply pass right between flower boxes and climb up front steps. Remote-controlled aerial vehicles from any hobby shop could land enough explosives on a roof to take out the top two floors, and it was even possible to get bombs inside buildings simply by mailing them as long as you sent enough all at once to beat the random sampling. Whenever it proved too difficult to get devices into a building, it was usually easy enough to get the people inside to come out and congregate around official-looking explosive-packed vans just by pulling a few fire alarms or calling in a bomb threat.</p>
+<p>But HLP operations got harder very quickly. Building perimeters got stronger, entire streets were shut down, and materials became more difficult to obtain. Small blasts were still easy to manufacture, but delivering them precisely enough to do significant damage was becoming nearly impossible. Automated defense systems were installed on roofs, and every government package was imaged and usually even opened before it was put on a truck, and then again as it came off. <span class="pull_quote">Anything foreign or suspicious was destroyed long before a high-value target was within its blast radius.</span> The only thing that moved freely between government facilities and the outside world were party members themselves.</p>
+<p>There were never any attempts to recruit suicide bombers. The reward for giving up an HLP terrorist was too high to risk approaching anyone who couldn&#8217;t be trusted, and there was far more fear and complacency under the People&#8217;s Party than radicalism. <span class="pull_quote">The best way to get a human being to deliver a payload into a government facility was to do it without their knowledge.</span></p>
+<p>The first round of attacks killed around 300 people. This time, the government responded with more than just increased security, additional procedures, and new technologies. These were the kinds of attacks that The Party needed to justify instituting an entirely new police force.</p>
+<p>The People&#8217;s Police targeted anyone considered an enemy of the state. They didn&#8217;t wear uniforms or drive marked cars, and they seldom reported in. They wore street clothes, held common jobs, lived in apartment buildings, used public transportation, and carried government-issued handsets like everyone else. But their handsets fed them names and locations and special instructions. The People&#8217;s Police operated autonomously, but were capable of coordinating and striking in-force when necessary. They concealed a variety of weapons and devices, and were authorized to use them in any way they saw fit. As long as objectives were met, no questions were asked.</p>
+<p>Slipping explosives into jacket pockets and implanting them in handsets or the heels of shoes got to be too risky with the proliferation of the PP, so the HLP began researching new types of explosives. In particular, they focused on a technology called biomunitions. The downside of biomunitions was that an armed subject couldn&#8217;t be detonated on demand like a conventional bomb which meant they were less reliable and precise. But the series of catalysts were easy to deliver and completely undetectable. They could be slipped into a meal or a drink, or delivered in the form of hand cream or foot powder. They could be fed to bomb-sniffing dogs, or to pigeons who nested on the windowsills of Supreme Court justices, or mixed into formula given to babies in the federal daycare facilities. <span class="pull_quote">What biomunitions lacked in precision and predictability, they more than made up for in sheer volume.</span></p>
+<p>When the government figured out how the HLP was still operating, they began requiring anyone who worked in a federal facility to use government rations. Every drink, every meal, every pill, and every hygiene product had to be issued by the government and sealed in tamper-proof packaging. A certain percentage of federal employees were randomly assigned to work from home every day, and office buildings were divided up into hundreds of sealed compartments designed to contain blasts. So many people began leaving their jobs that an emergency measure was passed which declared that every federal position &mdash; from elected officials to postal carriers &mdash; was now a military assignment, and any attempt to resign or otherwise leave would be considered desertion. <span class="pull_quote">The United States was officially at war with the HLP.</span></p>
+<p>Omo was unexpectedly released from prison and placed under minimum security house arrest. The PP imposed no restrictions on his communications, nor on who was permitted to visit him. Party members claimed that his release was a concession to the HLP &mdash; a sign of the government&#8217;s desire to begin the process of reconciliation &mdash; but the HLP recognized the move as a desperate attempt to draw out key members. Omo knew that it was far too dangerous to attempt to contact his archivists directly, so when he was ready to talk, he addressed the entire world instead.</p>
+<p>The only news organization willing to risk speaking with Omo was the Arabic-language news network, Al Jazeera. They interviewed him at his home and managed to air the entire exchange continuously for over six hours before it was taken down. Omo announced to the world that the Human Legacy Project was alive and well, that it had already entered Phase Three, and that it was now impossible to stop. It had become ubiquitous and decentralized, powered by an autonomous and rapidly mutating piece of software called a worm which had been living inside the federal and global networks since before Omo left the SETI Institute. It was almost certainly installed on every device that had ever connected to a network, and not only had it archived all the data from Mount Legacy before the facility went offline, but it had also likely discovered and captured better than 99.9% of all data stored on every accessible network. The HLP virus had archived and organized, for all intents and purposes, the entire sum of human knowledge, forming a detailed chronological record of all of mankind&#8217;s achievements and failures. The data was stored, Omo said, in the one place where even the government could no longer get at it: the constellation of ROSA satellites orbiting over 12,000 miles above the surface of the Earth.</p>
+<p>But the endgame was just beginning, Omo told the world. The HLP wasn&#8217;t finished yet. From time to time, the project would detect when it required human intervention, and it would automatically contact the necessary archivists. Until then, his instructions were to stand down. <span class="pull_quote">There was nothing left to do but to wait for the fourth and final stage to begin.</span></p>
+<p>That night, the chief of the Washington, DC Al Jazeera bureau was arrested, and the next day, Omo was exiled back to eastern Africa. Despite supposedly being inoculated before he left, Omo contracted malaria and died beside the river from which he took his name.</p>
+
+<div class="hr">&sect;</div>
+
+<p><span class="dropcap">I</span>nitiating the burn sequence to deorbit the satellites only requires biometric authentication from five of us, so we don&#8217;t need Sasha. But the problem is doing it without drawing attention. All of us taking turns placing our palms against notebook screens or peering into camera lenses for retina scans wouldn&#8217;t exactly be subtle, so we settle on voice analysis. Yuuka sneezes and excuses herself. Rory blesses her and my wife asks her if she needs a tissue. I comment on how everyone at work is getting sick, and Jakub mentions he could use a couple of days in bed himself. We complete the exchange, then go back to what we were doing. I can see on my screen that authentication was successful. Instructions that were probably written decades ago are now being compiled. When they are ready, they will be transmitted to whichever satellite is in position. That satellite will then transmit them to its neighbor, and the process will continue until the entire constellation is prepared to begin Phase Four.</p>
+<p>I think about what my wife said when we discovered what was about to happen. <em><span class="pull_quote">Maybe it&#8217;s time for all this to be over.</span></em> <span class="pull_quote">There is a part of all of us that wants the HLP to fail.</span> There&#8217;s a part of us that&#8217;s tired of being scared all the time, that hates suspecting everyone around us of being PP, that wants to live the same controlled and methodical and mundane existence as everyone else. I miss my wife. It takes all of my self-control to sit here beside her and pretend that I don&#8217;t know her. I can smell her shampoo and I remember how she tastes and how she feels. I want to hold her hand. I want to leave here with her. I want to sit beside her on the train ride home and laugh together. Maybe we will. <span class="pull_quote">Maybe this is as much of a beginning as it is an end.</span></p>
+<p>The library has gotten more crowded than it should be this late. I look down at my watch and then tap on it like it&#8217;s stopped which gives me an excuse to look around for a wall clock. I see a man walk by the library entrance, glance in, and keep walking. Sasha. There&#8217;s something wrong. I reach for the lid of my notebook to close it when I feel the unmistakable cold metal of a gun barrel pressed hard against the back of my head.</p>
+<p>&#8220;Leave it open,&#8221; a voice behind me says. &#8220;And disable the cloaking.&#8221;</p>
+<p>We are surrounded by plain-clothes PP officers leveling pistols at our heads. I look around at their faces. They don&#8217;t object. Their expressions are intense and I can tell their veins are full of adrenaline.</p>
+<p>&#8220;You, too,&#8221; the officer across from me says to Rory. He&#8217;s talking about the cloaking. They are wearing their badges on the outside now, and I can see that he&#8217;s a captain. &#8220;<em>Now</em>. We won&#8217;t ask again.&#8221;</p>
+<p>We both enter the key sequences that align the duel displays on our notebooks so they project a single image. We are now all watching the satellites.</p>
+<p>&#8220;What&#8217;s about to happen?&#8221; the captain asks me.</p>
+<p>&#8220;You tell me,&#8221; I say. &#8220;I assume we&#8217;re under arrest.&#8221;</p>
+<p>&#8220;I mean with the satellites. What did you just do? What&#8217;s the next phase?&#8221;</p>
+<p>&#8220;There is no next phase,&#8221; Jakub says. &#8220;It&#8217;s over. They&#8217;re about to deorbit.&#8221;</p>
+<p>&#8220;Bullshit,&#8221; the captain says. &#8220;I&#8217;ll give you one more chance to tell me before we start putting holes in heads.&#8221;</p>
+<p>Jakub reacts to something on my screen. The satellites are changing. Small apertures are forming in the ends of the cylinders and growing larger. There&#8217;s something inside. There&#8217;s a simultaneous flash across all 16 video feeds and the blur of something being ejected.</p>
+<p>&#8220;What was that?&#8221; the captain says.</p>
+<p>&#8220;We don&#8217;t know,&#8221; Rory says. He instinctively starts tapping keys. Nobody stops him. &#8220;This is as new to us as it is to you.&#8221;</p>
+<p>&#8220;You&#8217;d better figure it out,&#8221; the captain tells him. &#8220;From now on, your lives are only as valuable as the information you give us.&#8221;</p>
+<p>&#8220;Just give me a minute,&#8221; Rory says impatiently. &#8220;I&#8217;m trying.&#8221;</p>
+<p>Something else starts happening. The satellites&#8217; propulsion systems begin to glow.</p>
+<p>&#8220;There&#8217;s the burn,&#8221; Yuuka says.</p>
+<p>&#8220;I told you,&#8221; Jakub says. &#8220;They&#8217;re deorbiting.&#8221;</p>
+<p>&#8220;Jesus Christ.&#8221; The captain looks around at his men. &#8220;Those were missiles they just fired.&#8221;</p>
+<p>Nobody says anything. Rory is frantically typing. <span class="pull_quote">I look over at my wife. I wonder if this building will be a target.</span></p>
+<p>&#8220;Tell us where they&#8217;re going,&#8221; the captain says. &#8220;Tell us now.&#8221;</p>
+<p>&#8220;I don&#8217;t think they&#8217;re missiles,&#8221; Rory says. &#8220;They&#8217;re going in the other direction. They&#8217;re going away from Earth.&#8221;</p>
+<p>The captain looks confused. &#8220;Why?&#8221;</p>
+<p>&#8220;I don&#8217;t know. They&#8217;re all moving directly away from us, and they&#8217;re broadcasting radio and optical signals outward.&#8221;</p>
+<p>&#8220;Stop them,&#8221; the captain says.</p>
+<p>&#8220;I can&#8217;t. There&#8217;s no way to communicate with them.&#8221;</p>
+<p>The captain points his gun directly at my wife&#8217;s face. &#8220;I said stop them. Or I start executing.&#8221;</p>
+<p>Rory is sweating. He isn&#8217;t typing anymore. He&#8217;s trying to figure out what to do. The captain&#8217;s pistol goes off and everyone reacts. My ears are ringing. I see the shell casing eject but I don&#8217;t hear it land. I can&#8217;t see my wife in my peripheral vision anymore. I don&#8217;t turn to look. <span class="pull_quote">Yuuka is screaming and I can see everything I need to see in her.</span></p>
+<p>&#8220;Now you know I&#8217;m not bluffing,&#8221; the captains says calmly. The gun moves to me. &#8220;I&#8217;m going to count to ten, and if you haven&#8217;t figured out how to stop them, he&#8217;s next.&#8221;</p>
+<p>Yuuka is screaming at what she sees on the floor behind me. Rory is trying to focus. The captain starts counting aloud and I close my eyes. I can hear my wife softly gurgling. The scene I just witnessed replays itself in my mind. I picture the impassivity in the captain&#8217;s face and I hear the calm in his voice. I know that he feels nothing right now. I have felt that way, too. <span class="pull_quote">I think about all the things I&#8217;ve done, the thousands of lives I&#8217;ve taken and somehow justified.</span> That&#8217;s when it all begins to make sense to me. I understand what Phase Four is now. As I listen to the captain finish his count, I realize that The Human Legacy Project had never been intended for us. For us, it had always been too late.</p>
+</div>
+
+</body>
+</html>
