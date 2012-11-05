@@ -73,7 +73,7 @@ module('CSSOM', {
     setup: function(){
         var style = document.createElement('style')
         style.id = 'testStyle'
-        style.innerHTML = '#testSource { flow-into: article } .region{ flow-from: article; width: 100px; height: 20px; }'
+        style.innerHTML = '#testSource { flow-into: myFlow } .region{ flow-from: myFlow; width: 100px; height: 20px; }'
 
         var el = document.createElement('div') 
         el.id = 'testHTML'
@@ -113,8 +113,6 @@ test('NamedFlow has overset property', function(){
     
     strictEqual(nf.overset, true, 'Has overset property set to "true" if no region chain')
 }) 
-      
-
 
 test('NamedFlow has regions', function(){
     var nf = new CSSRegions.NamedFlow('myFlow', ['#source'], ['.region'])
@@ -132,9 +130,20 @@ test('NamedFlow has contentNodes', function(){
 }) 
 
 test('document has getNamedFlows method', function(){
+    CSSRegions.init()  
+    
     equal(typeof document.getNamedFlows, 'function', 'getNamedFlows() is defined as function')
+    equal(document.getNamedFlows().length, 1, 'one named flow exists')
+    ok(document.getNamedFlows().item(0), 'named flow can be accessed by item()')
+    ok(document.getNamedFlows().namedItem('myFlow'), 'named flow can be accessed by namedItem()')
+    ok(document.getNamedFlows()[0], 'named flow can be accessed by index')
+    equal(document.getNamedFlows()[0].name, 'myFlow', 'named flow has name')
 })
 
 test('document has getFlowByName method', function(){
+    CSSRegions.init()
+    
     equal(typeof document.getFlowByName, 'function', 'getFlowByName() is defined as function')
+    ok(document.getFlowByName('myFlow'), 'named flow can be accessed by name')
+    equal(document.getFlowByName('myFlow').name, 'myFlow', 'named flow has name')
 })
