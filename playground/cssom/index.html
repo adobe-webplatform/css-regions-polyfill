@@ -83,30 +83,27 @@ http://creativecommons.org/publicdomain/zero/1.0/
 </div>
 
 
-<script>
+<script>  
+                                     
+    function init(){
+        var flows = document.webkitGetNamedFlows()
+        var flow = flows.namedItem("article");
 
-(function() {
-    setTimeout(
-            function () {
-                var flows = document.webkitGetNamedFlows()
-                var flow = flows.namedItem("article");
-
-                flow.addEventListener("regionLayoutUpdate", function(e) {
-                    var art, div;
-                    if (e.target.overset) {
-                        div = document.createElement("div");
-                        div.className = "myregions";
-                        art = document.getElementById("art");
-                        art.appendChild(div);
-                        if (CSSRegions) {   
-                            flow.regions.push(div)
-                            CSSRegions.doLayout();
-                        }
-                    }
-                })
-            }, 500);
-
-})();
+        flow.addEventListener("regionLayoutUpdate", function(e) {
+            var art, div;
+            if (e.target.overset) {
+                div = document.createElement("div");
+                div.className = "myregions";
+                art = document.getElementById("art");
+                art.appendChild(div);
+                if (CSSRegions) {   
+                    flow.regions.push(div)
+                    CSSRegions.doLayout();
+                }
+            }
+        })
+    }
+    window.addEventListener('load', init)
 
 </script>
 
