@@ -88,7 +88,8 @@ http://creativecommons.org/publicdomain/zero/1.0/
 (function() {
     setTimeout(
             function () {
-                var flow = document.webkitGetNamedFlows().namedItem("article");
+                var flows = document.webkitGetNamedFlows()
+                var flow = flows.namedItem("article");
 
                 flow.addEventListener("regionLayoutUpdate", function(e) {
                     var art, div;
@@ -97,8 +98,8 @@ http://creativecommons.org/publicdomain/zero/1.0/
                         div.className = "myregions";
                         art = document.getElementById("art");
                         art.appendChild(div);
-                        if (CSSRegions) {
-                            CSSRegions.addRegionToNamedFlow("article", div);
+                        if (CSSRegions) {   
+                            flow.regions.push(div)
                             CSSRegions.doLayout();
                         }
                     }

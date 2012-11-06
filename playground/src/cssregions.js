@@ -425,45 +425,67 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
 window.CSSRegions = function(scope) {
     
     function Polyfill(){
-        // Collection of named flow CSS rules with information about nodes to collect
-        // This information will be used to identify DOM nodes
-        // @see polyfill.addRule()
-        this.namedFlowRules = [];
-
-        // map of NamedFlow objects. NamedFlow identifier is the key, NamedFlow instance is the value
-        this.namedFlows = {};  
+        
+        this.setup()
     }
     
     Polyfill.prototype = {
-        init: function() {
+        init: function() {   
+            
+            // setup or reset everything
+            this.setup()                      
+            
+            var parser = new CSSParser(),
+                inlineStyles = document.querySelector("style"),
+                rule,
+                rules;
+            
             if (!document.styleSheets.length) {
                 console.log("No CSS rules defined!");
                 return;
             }
 
-            var inlineStyles = document.querySelector("style");
             if (inlineStyles === null) {
                 console.log("There is no inline CSS for CSS Regions!");
                 return;
             }
 
             // Parse the inline stylesheet for rules
-            var parser = new CSSParser();
-            parser.parse(document.querySelector("style").innerHTML);
+            parser.parse(inlineStyles.innerHTML);
             if (parser.cssRules.length === 0) {
                 console.log("There is no inline CSS for CSS Regions!");
                 return;
-            }                        
+            }  
 
             // parse the rules and look for "flow-into" and "flow-from" rules;
-            var rules = this.getNamedFlowRules(parser.cssRules);   
+            rules = this.getNamedFlowRules(parser.cssRules);   
                              
-            for (var rule in rules){
-                this.addRule(rules[rule])
-            }    
+            for (flowName in rules){
+                                
+                var contentNodesSelectors = rules[flowName].contentNodesSelectors                                                   
+                var regionsSelectors = rules[flowName].regionsSelectors
+
+                // The NamedFlow will collect and sort the DOM nodes based on selectors provided
+                var namedFlow = new NamedFlow(flowName, contentNodesSelectors, regionsSelectors)            
+
+                this.namedFlows.push(namedFlow)
+            } 
+                                                                            
+            this.namedFlowCollection = new Collection(this.namedFlows, 'name')        
+            
+            // Expose methods to window/document as defined by the CSS Regions spec
+            this.exposeGlobalOM();    
 
             // If there are CSS regions move the content from named flows into region chains
             this.doLayout();
+        },
+        
+        setup: function(){    
+            // Array of NamedFlow objects.
+            this.namedFlows = [];
+            
+            // instance of Collection
+            this.namedFlowCollection
         },
         
         getNamedFlowRules: function(cssRules) {
@@ -475,66 +497,56 @@ window.CSSRegions = function(scope) {
                 rule = cssRules[i];
                 for (property in rule.style) {
                     if (property.indexOf("flow-") !== -1) {
-                        value = rule.style[property];
-                        rules[value] = rules[value] || {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []};
+                        
+                        value = rule.style[property];  
+                        rules[value] = rules[value] || {contentNodesSelectors: [], regionsSelectors: []};
+                        
                         if (property.indexOf("flow-into") !== -1) {
-                            rules[value]["namedFlows"].push(rule.selectorText);
+                            rules[value].contentNodesSelectors.push(rule.selectorText);
                         } else {
-                            rules[value]["regionChains"].push(rule.selectorText);
+                            rules[value].regionsSelectors.push(rule.selectorText);
                         }
                         break;
                     }
                 }
-            } 
-
+            }           
+            
             return rules;        
         },
         
-        /*
-            Add a named flow CSS rule that contains
-            - identifier of the named flow
-            - selectors array of the content to be collected into the flow
-            - selectors array of the elements to become regions
-
-            @Example
-            rule = {
-                identifier: "myFlow",
-                contentNodesSelectors: ["#source-content", "#aside-content"],
-                regionChainSelectors: [".myregion"] 
-            }
-        */
-        addRule: function(rule){
-            this.namedFlowRules.push(rule);
-        },
-        
         doLayout: function() {
-            if (!this.namedFlowRules || !this.namedFlowRules.length){
+            if (!this.namedFlows || !this.namedFlows.length){
                 console.warn("No named flow / regions CSS rules");
                 return
             }                           
             
-            flowContentIntoRegions(this.namedFlowRules);
-        }
+            flowContentIntoRegions();
+        },
+                                   
+        // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
+        exposeGlobalOM: function(){
+            document['getNamedFlows'] = document['webkitGetNamedFlows'] = this.getNamedFlows.bind(this)
+            document['getFlowByName'] = document['webkitGetFlowByName'] = this.getFlowByName.bind(this)
+        },
+          
+        /*
+            Returns a map of NamedFlow objects where their 'name' attribute are the map keys.
+            Also accessible from window.getNamedFlows()
+        */
+        getNamedFlows: function(){
+            return this.namedFlowCollection
+        },
+          
+        /*
+            Returns a NamedFlow instance by its name or null if it does not exist
+        */
+        getFlowByName: function(name){         
+            return this.namedFlowCollection.namedItem(name) || null
+        },
+        
+        "NamedFlow": NamedFlow,
+        "Collection": Collection
     }
-
-    /**
-     * Orders the elements used for the name flows and regions
-     * @param regions
-     */
-    var findDOMOrderForNameFlowsAndRegions = function(regions) {
-        var nameFlow, currentRegion;
-        for (nameFlow in regions) {
-            currentRegion = regions[nameFlow];
-            // Find the name flows/region chains DOM elements
-            // Order them by the order of their DOM appearance
-            if (regions[nameFlow].DOMSource.length === 0) {
-                regions[nameFlow].DOMSource = orderNodes(currentRegion.namedFlows);
-            }
-            if (regions[nameFlow].DOMRegions.length === 0) {
-                regions[nameFlow].DOMRegions = orderNodes(currentRegion.regionChains);
-            }
-        }
-    };
 
     /**
      * Returns the nodes ordered by their DOM order
@@ -604,27 +616,24 @@ window.CSSRegions = function(scope) {
         return destinationNodes;
     };
 
-    // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
     /**
      * This is where the regions parsed by the CSS parser are actually put to used.
      * For each region rule we flow the content.
      * @param regions
      */
-    var flowContentIntoRegions = function(regions) {
-        var nameFlow, currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el;
+    var flowContentIntoRegions = function() {
+        var flows = document.getNamedFlows(),
+            currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el;
+        
+        for (i = 0; i< flows.length; i++){
+            currentFlow = flows[i]
 
-        findDOMOrderForNameFlowsAndRegions(regions);
-        addCSSOMAPI(regions);
-
-        for (nameFlow in regions) {
-            currentFlow = regions[nameFlow];
             // Build the source to be flown from the region names
-            sourceNodes = getNodesForFlow(currentFlow.DOMSource);
+            sourceNodes = getNodesForFlow(currentFlow.contentNodes);
             // Remove regions with display:none;
-            destinationNodes = getRegionsForFlow(currentFlow.DOMRegions);
-
-            document.getNamedFlows().namedItem(nameFlow).overset = false;
-            document.webkitGetNamedFlows().namedItem(nameFlow).overset = false
+            destinationNodes = getRegionsForFlow(currentFlow.getRegions());
+                         
+            currentFlow.overset = false;
 
             // Flow the source into regions
             for (i = 0, l = destinationNodes.length; i < l; i++) {
@@ -650,8 +659,7 @@ window.CSSRegions = function(scope) {
                         if (checkForOverflow(currentRegion)) {
                             currentRegion.webKitRegionOverset = "overset";
                             currentRegion.regionOverset = "overset";
-                            document.getNamedFlows().namedItem(nameFlow).overset = true;
-                            document.webkitGetNamedFlows().namedItem(nameFlow).overset = true;
+                            currentFlow.overset = true;
                         }
                     } else {
                         while (el) {
@@ -668,20 +676,11 @@ window.CSSRegions = function(scope) {
                         currentRegion.regionOverset = "fit";
                     }
                 }
-            }
-            fireRegionLayoutUpdateEvents(nameFlow);
-        }
-    };
-
-    // Dispatch regionLayoutUpdate event document.getNamedFlows().namedItem(nameFlow)
-    var fireRegionLayoutUpdateEvents = function(nameFlow) {
-        var nf, e;
-        nf = namedFlows.obj[nameFlow];
-        if (nf) {
-            e = {type: "regionLayoutUpdate", target: nf};
-            nf.fire(e);
-            e = {type: "webkitRegionLayoutUpdate", target: nf};
-            nf.fire(e);
+            }  
+                           
+            // Dispatch regionLayoutUpdate event 
+            currentFlow.fire({type: "regionLayoutUpdate", target: currentFlow})
+            currentFlow.fire({type: "webkitRegionLayoutUpdate", target: currentFlow})
         }
     };
 
@@ -850,78 +849,6 @@ window.CSSRegions = function(scope) {
         return arr.slice(i, l+1).join(" ") + " ";
     };
 
-    var namedFlows;
-
-    var addCSSOMAPI = function(regions) {
-        var f, nameFlow, o;
-
-        if (!namedFlows) {
-            namedFlows = {obj: {}, arr: []};
-            for (nameFlow in regions) {
-                o = buildNamedFlow(nameFlow);
-                namedFlows.obj[nameFlow] = o;
-                namedFlows.arr.push(o);
-            }
-        } else {
-            return;
-        }
-
-        f = function () {
-            var ret = {namedItem: null, item: null};
-
-            ret.namedItem = function(name) {
-                if (namedFlows.obj[name]) {
-                    return namedFlows.obj[name];
-                } else {
-                    return null;
-                }
-            };
-
-            ret.item = function(index) {
-              if (namedFlows.arr.length > index && index > 0){
-                return namedFlows.arr[index];
-              } else {
-                return null;
-              }
-            };
-
-            return ret;
-        };
-
-        document.getNamedFlows = f;
-        document.webkitGetNamedFlows = f;
-    };
-
-    var buildNamedFlow = function(nameFlow) {
-        return new NamedFlow(nameFlow, false);
-    };
-
-    // // regions = {flowName : {namedFlows: [], regionChains: [], DOMSource: [], DOMRegions: []} }
-    // CSSRegions.addRegionToNamedFlow = function(flowName, elem) {
-    //     var regions;
-    //     if (!CSSRegions.regions) {
-    //         return;
-    //     }
-    //     regions = this.regions;
-    //     if (regions[flowName]) {
-    //         regions[flowName].DOMRegions.push(elem);
-    //     }
-    // };
-    // 
-    // CSSRegions.removeRegionFromNamedFlow = function(flowName, elem) {
-    //     var regions, i;
-    //     if (!CSSRegions.regions) {
-    //         return;
-    //     }
-    //     regions = this.regions;
-    //     if (regions[flowName]) {
-    //         i = regions[flowName].DOMRegions.indexOf(elem);
-    //         if (i >= 0) {
-    //             regions[flowName].DOMRegions.splice(i, 1);
-    //         }
-    //     }
-    // };  
-
     /**
      * Returns true if the argument has content that overflows.
      * @param el
@@ -973,14 +900,90 @@ window.CSSRegions = function(scope) {
                 }
             }
         }
-    };
+    }; 
+    
+    /*
+        Turns an array into a collection.
+        Collection items can be iterated over like an array.
+        
+        Collection items can be accessed by:
+        - index
+        - index() method
+        - namedItem() method
+        
+        @param {Array} arr The source array
+        @param {String} key Optional key found on each item in the source array, 
+                            used as index in .namedItem() accessor
+                            
+        @return {Object}
+    */
+    function Collection(arr, key){
+        if (typeof arr.pop != 'function' ){
+            throw "Invalid input. Expected an array, got: " + typeof arr
+        }                   
+        
+        this.map = {};
+        this.length = 0;
+        
+        var len = arr.length,
+            i = 0;
 
-    function NamedFlow(nameFlow, overset) {
-        this.name = nameFlow;
-        this.overset = overset;
+        for (i; i < len; i++){
+            this[i] = arr[i]       
+            this.length++
+            
+            // build a map indexed with specified object key for quick access
+            if (key && arr[i][key]){    
+                this.map[arr[i][key]] = this[i]
+            }
+        }
+    }   
+    
+    Collection.prototype = {
+        /*
+            Get item by numeric index
+            @param {Number} index
+        */
+        item: function(index){
+            return this[index] || null
+        },
+
+        /*
+            Get item by item key 
+            @param {String} key Optional index key specified in the constructor
+        */
+        namedItem: function(key){
+            return this.map[key] || null
+        }
+    }
+
+    /*
+        NamedFlow obeject to polyfill the CSS Regions spec one
+        
+        @param {String} flowName The identifier of the flow
+        @param {Array} contentNodesSelectors List of selectors of nodes to be collected into the named flow
+        @param {Array} regionsSelectors List of selectors of nodes to be used as regions
+    */
+    function NamedFlow(flowName, contentNodesSelectors, regionsSelectors) {
+        this.name = flowName || 'none';
+        this.overset = true;   
+        this.contentNodes = []
+        this.regions = []       
+        
+        if (contentNodesSelectors && contentNodesSelectors.length){
+            this.contentNodes = orderNodes(contentNodesSelectors)
+        }          
+
+        if (regionsSelectors && regionsSelectors.length){
+            this.regions = orderNodes(regionsSelectors)
+        }          
+        
     };
     NamedFlow.prototype = new EventManager();
     NamedFlow.prototype.constructor = NamedFlow;
+    NamedFlow.prototype.getRegions = function(){
+        return this.regions
+    }
       
     var polyfill;
     
