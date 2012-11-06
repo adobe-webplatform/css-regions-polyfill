@@ -147,3 +147,23 @@ test('document has getFlowByName method', function(){
     ok(document.getFlowByName('myFlow'), 'named flow can be accessed by name')
     equal(document.getFlowByName('myFlow').name, 'myFlow', 'named flow has name')
 })
+
+asyncTest('NamedFlow throws regionLayoutUpdate event', function(){
+    // expect one assertion
+    expect(1)              
+    
+    CSSRegions.init()  
+    
+    var nf = document.getFlowByName('myFlow'),
+        region1 = document.querySelector('.region');
+        
+    nf.addEventListener('regionLayoutUpdate', function(e){
+        start()
+        equal(e.target.name, 'myFlow')
+    })  
+    
+    // force a relayout
+    region1.style = "width: 50px"
+    CSSRegions.doLayout()
+
+})
