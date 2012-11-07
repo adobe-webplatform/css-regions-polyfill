@@ -148,6 +148,18 @@ test('document has getFlowByName method', function(){
     equal(document.getFlowByName('myFlow').name, 'myFlow', 'named flow has name')
 })
 
+// Prefix support for demos built using only vendor-specific code.
+// This is bad and we should feel bad.
+// TODO: update regions demos/code to use vendor agnostic code.
+test('Smoke test prefix support', function(){
+    CSSRegions.init()  
+    
+    equal(typeof document.webkitGetNamedFlows, 'function', 'webkitGetNamedFlows() is defined as function')
+
+    var nf = document.webkitGetNamedFlows().namedItem('myFlow')
+    ok(nf, 'named flow can be accessed by webkitGetNamedFlows()')
+})
+
 asyncTest('NamedFlow throws regionLayoutUpdate event', function(){
     // expect one assertion
     expect(1)              
@@ -159,7 +171,7 @@ asyncTest('NamedFlow throws regionLayoutUpdate event', function(){
         
     nf.addEventListener('regionLayoutUpdate', function(e){
         start()
-        equal(e.target.name, 'myFlow')
+        equal(e.target.name, 'myFlow') 
     })  
     
     // force a relayout
