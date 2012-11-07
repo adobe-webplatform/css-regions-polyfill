@@ -140,12 +140,16 @@ test('document has getNamedFlows method', function(){
     equal(document.getNamedFlows()[0].name, 'myFlow', 'named flow has name')
 })
 
-test('document has getFlowByName method', function(){
-    CSSRegions.init()
+// Prefix support for demos built using only vendor-specific code.
+// This is bad and we should feel bad.
+// TODO: update regions demos/code to use vendor agnostic code.
+test('Smoke test prefix support', function(){
+    CSSRegions.init()  
     
-    equal(typeof document.getFlowByName, 'function', 'getFlowByName() is defined as function')
-    ok(document.getFlowByName('myFlow'), 'named flow can be accessed by name')
-    equal(document.getFlowByName('myFlow').name, 'myFlow', 'named flow has name')
+    equal(typeof document.webkitGetNamedFlows, 'function', 'webkitGetNamedFlows() is defined as function')
+
+    var nf = document.webkitGetNamedFlows().namedItem('myFlow')
+    ok(nf, 'named flow can be accessed by webkitGetNamedFlows()')
 })
 
 asyncTest('NamedFlow throws regionLayoutUpdate event', function(){
@@ -154,16 +158,15 @@ asyncTest('NamedFlow throws regionLayoutUpdate event', function(){
     
     CSSRegions.init()  
     
-    var nf = document.getFlowByName('myFlow'),
+    var nf = document.getNamedFlows().namedItem('myFlow'),
         region1 = document.querySelector('.region');
         
     nf.addEventListener('regionLayoutUpdate', function(e){
         start()
-        equal(e.target.name, 'myFlow')
+        equal(e.target.name, 'myFlow') 
     })  
     
     // force a relayout
     region1.style = "width: 50px"
     CSSRegions.doLayout()
-
 })
