@@ -526,7 +526,6 @@ window.CSSRegions = function(scope) {
         // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
         exposeGlobalOM: function(){
             document['getNamedFlows'] = document['webkitGetNamedFlows'] = this.getNamedFlows.bind(this)
-            document['getFlowByName'] = document['webkitGetFlowByName'] = this.getFlowByName.bind(this)
         },
           
         /*
@@ -537,13 +536,6 @@ window.CSSRegions = function(scope) {
             return this.namedFlowCollection
         },
           
-        /*
-            Returns a NamedFlow instance by its name or null if it does not exist
-        */
-        getFlowByName: function(name){         
-            return this.namedFlowCollection.namedItem(name) || null
-        },
-        
         "NamedFlow": NamedFlow,
         "Collection": Collection
     }
