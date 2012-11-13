@@ -431,15 +431,13 @@ window.CSSRegions = function(scope) {
     
     Polyfill.prototype = {
         init: function() {   
-            
+
+            var rules, flowName, contentNodesSelectors, regionsSelectors, parser,
+                inlineStyles = document.querySelector("style");
+
             // setup or reset everything
-            this.setup()                      
-            
-            var parser = new CSSParser(),
-                inlineStyles = document.querySelector("style"),
-                rule,
-                rules;
-            
+            this.setup();
+
             if (!document.styleSheets.length) {
                 console.log("No CSS rules defined!");
                 return;
@@ -451,6 +449,7 @@ window.CSSRegions = function(scope) {
             }
 
             // Parse the inline stylesheet for rules
+            parser = new CSSParser();
             parser.parse(inlineStyles.innerHTML);
             if (parser.cssRules.length === 0) {
                 console.log("There is no inline CSS for CSS Regions!");
@@ -460,22 +459,16 @@ window.CSSRegions = function(scope) {
             // parse the rules and look for "flow-into" and "flow-from" rules;
             rules = this.getNamedFlowRules(parser.cssRules);   
                              
-            for (flowName in rules){
-                                
-                var contentNodesSelectors = rules[flowName].contentNodesSelectors                                                   
-                var regionsSelectors = rules[flowName].regionsSelectors
-
+            for (flowName in rules) {
+                contentNodesSelectors = rules[flowName].contentNodesSelectors;
+                regionsSelectors = rules[flowName].regionsSelectors;
                 // The NamedFlow will collect and sort the DOM nodes based on selectors provided
-                var namedFlow = new NamedFlow(flowName, contentNodesSelectors, regionsSelectors)            
-
-                this.namedFlows.push(namedFlow)
+                this.namedFlows.push(new NamedFlow(flowName, contentNodesSelectors, regionsSelectors));
             } 
                                                                             
-            this.namedFlowCollection = new Collection(this.namedFlows, 'name')        
-            
+            this.namedFlowCollection = new Collection(this.namedFlows, 'name');
             // Expose methods to window/document as defined by the CSS Regions spec
             this.exposeGlobalOM();    
-
             // If there are CSS regions move the content from named flows into region chains
             this.doLayout();
         },
@@ -483,9 +476,8 @@ window.CSSRegions = function(scope) {
         setup: function(){    
             // Array of NamedFlow objects.
             this.namedFlows = [];
-            
             // instance of Collection
-            this.namedFlowCollection
+            this.namedFlowCollection = null;
         },
         
         getNamedFlowRules: function(cssRules) {
@@ -517,23 +509,22 @@ window.CSSRegions = function(scope) {
         doLayout: function() {
             if (!this.namedFlows || !this.namedFlows.length){
                 console.warn("No named flow / regions CSS rules");
-                return
+                return;
             }                           
-            
             flowContentIntoRegions();
         },
                                    
         // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
-        exposeGlobalOM: function(){
-            document['getNamedFlows'] = document['webkitGetNamedFlows'] = this.getNamedFlows.bind(this)
+        exposeGlobalOM: function() {
+            document['getNamedFlows'] = document['webkitGetNamedFlows'] = this.getNamedFlows.bind(this);
         },
           
         /*
             Returns a map of NamedFlow objects where their 'name' attribute are the map keys.
             Also accessible from window.getNamedFlows()
         */
-        getNamedFlows: function(){
-            return this.namedFlowCollection
+        getNamedFlows: function() {
+            return this.namedFlowCollection;
         },
           
         "NamedFlow": NamedFlow,
@@ -618,7 +609,7 @@ window.CSSRegions = function(scope) {
             currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el;
         
         for (i = 0; i< flows.length; i++){
-            currentFlow = flows[i]
+            currentFlow = flows[i];
 
             // Build the source to be flown from the region names
             sourceNodes = getNodesForFlow(currentFlow.contentNodes);
@@ -638,7 +629,7 @@ window.CSSRegions = function(scope) {
                     currentRegion.regionOverset = "empty";
                     continue;
                 }
-                // Don't use regions with display attribute value (none)
+                // Don't use regions with display attribute value equal to none
                 if (getComputedStyle(currentRegion).display !== "none") {
                     el = sourceNodes.shift();
                     // The last region gets all the remaining content
@@ -647,7 +638,7 @@ window.CSSRegions = function(scope) {
                             currentRegion.appendChild(el.cloneNode(true));
                             el = sourceNodes.shift();
                         }
-                        // Check if it overflows
+                        // Check if overflows
                         if (checkForOverflow(currentRegion)) {
                             currentRegion.webKitRegionOverset = "overset";
                             currentRegion.regionOverset = "overset";
@@ -671,8 +662,8 @@ window.CSSRegions = function(scope) {
             }  
                            
             // Dispatch regionLayoutUpdate event 
-            currentFlow.fire({type: "regionLayoutUpdate", target: currentFlow})
-            currentFlow.fire({type: "webkitRegionLayoutUpdate", target: currentFlow})
+            currentFlow.fire({type: "regionLayoutUpdate", target: currentFlow});
+            currentFlow.fire({type: "webkitRegionLayoutUpdate", target: currentFlow});
         }
     };
 
@@ -820,7 +811,7 @@ window.CSSRegions = function(scope) {
      */
     var getFilteredDOMElements = function(root, whatElements, condition) {
         var nodeIterator, currentNode,
-                nodes = [];
+            nodes = [];
         // createNodeIterator works in FF 3.5+, Chrome 1+, Opera 9+, Safari 3+, IE9+
         // https://developer.mozilla.org/en-US/docs/DOM/Document.createNodeIterator
         nodeIterator = document.createNodeIterator(root, whatElements, condition, false);
@@ -909,24 +900,23 @@ window.CSSRegions = function(scope) {
                             
         @return {Object}
     */
-    function Collection(arr, key){
+    function Collection(arr, key) {
+        var i, l;
+
         if (typeof arr.pop != 'function' ){
-            throw "Invalid input. Expected an array, got: " + typeof arr
+            throw "Invalid input. Expected an array, got: " + typeof arr;
         }                   
         
         this.map = {};
         this.length = 0;
         
-        var len = arr.length,
-            i = 0;
-
-        for (i; i < len; i++){
-            this[i] = arr[i]       
-            this.length++
+        for (i = 0, l = arr.length; i < l; i++){
+            this[i] = arr[i];
+            this.length++;
             
             // build a map indexed with specified object key for quick access
             if (key && arr[i][key]){    
-                this.map[arr[i][key]] = this[i]
+                this.map[arr[i][key]] = this[i];
             }
         }
     }   
@@ -936,16 +926,16 @@ window.CSSRegions = function(scope) {
             Get item by numeric index
             @param {Number} index
         */
-        item: function(index){
-            return this[index] || null
+        item: function(index) {
+            return this[index] || null;
         },
 
         /*
             Get item by item key 
             @param {String} key Optional index key specified in the constructor
         */
-        namedItem: function(key){
-            return this.map[key] || null
+        namedItem: function(key) {
+            return this.map[key] || null;
         }
     }
 
@@ -959,22 +949,22 @@ window.CSSRegions = function(scope) {
     function NamedFlow(flowName, contentNodesSelectors, regionsSelectors) {
         this.name = flowName || 'none';
         this.overset = true;   
-        this.contentNodes = []
-        this.regions = []       
+        this.contentNodes = [];
+        this.regions = [];
         
-        if (contentNodesSelectors && contentNodesSelectors.length){
-            this.contentNodes = orderNodes(contentNodesSelectors)
+        if (contentNodesSelectors && contentNodesSelectors.length) {
+            this.contentNodes = orderNodes(contentNodesSelectors);
         }          
 
-        if (regionsSelectors && regionsSelectors.length){
-            this.regions = orderNodes(regionsSelectors)
+        if (regionsSelectors && regionsSelectors.length) {
+            this.regions = orderNodes(regionsSelectors);
         }          
         
     };
     NamedFlow.prototype = new EventManager();
     NamedFlow.prototype.constructor = NamedFlow;
-    NamedFlow.prototype.getRegions = function(){
-        return this.regions
+    NamedFlow.prototype.getRegions = function() {
+        return this.regions;
     }
       
     var polyfill;
@@ -984,11 +974,9 @@ window.CSSRegions = function(scope) {
     }
 
     if (Modernizr.regions) {
-        return
-    }
-    else{
+        return;
+    } else{
         polyfill = new Polyfill;
-
         scope.addEventListener("load", function(){ polyfill.init() });
         scope.addEventListener("resize", function(){ polyfill.doLayout() });
     }
@@ -996,4 +984,3 @@ window.CSSRegions = function(scope) {
     return polyfill;
 
 }(window);
-
