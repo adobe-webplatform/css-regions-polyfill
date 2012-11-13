@@ -424,9 +424,8 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
  */
 window.CSSRegions = function(scope) {
     
-    function Polyfill(){
-        
-        this.setup()
+    function Polyfill() {
+        this.setup();
     }
     
     Polyfill.prototype = {
@@ -456,7 +455,7 @@ window.CSSRegions = function(scope) {
                 return;
             }  
 
-            // parse the rules and look for "flow-into" and "flow-from" rules;
+            // Parse the rules and look for "flow-into" and "flow-from" rules;
             rules = this.getNamedFlowRules(parser.cssRules);   
                              
             for (flowName in rules) {
@@ -605,8 +604,8 @@ window.CSSRegions = function(scope) {
      * @param regions
      */
     var flowContentIntoRegions = function() {
-        var flows = document.getNamedFlows(),
-            currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el;
+        var currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el,
+            flows = document.getNamedFlows();
         
         for (i = 0; i< flows.length; i++){
             currentFlow = flows[i];
