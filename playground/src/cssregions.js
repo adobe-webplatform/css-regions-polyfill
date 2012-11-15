@@ -269,47 +269,45 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                  set.unshift(rule); 
              }
              
-             function getBalancingBracketIndex(string, depth){
+             function getBalancingBracketIndex(string, depth) {
                 var index = 0; 
                 
                 while(depth){      
                     switch (string.charAt(index)){
                         case "{": 
-                         depth++;
-                        break
-
+                            depth++;
+                            break;
                         case "}":
-                         depth--;
-                        break
+                             depth--;
+                            break;
                     }        
-
                     index++;
                 } 
-
                 return (index - 1);
              }
-             
          }
         
-        function cascadeRules(rules){
-            if (!rules){
+        function cascadeRules(rules) {
+            if (!rules) {
                 throw new Error("CSSParser.cascadeRules(). No css rules available for cascade");
             }         
             
-            if (!rules.length){
+            if (!rules.length) {
                 return rules;
             }
             
-            var cascaded = [], temp = {}, selectors = [];
+            var cascaded = [],
+                temp = {},
+                selectors = [];
             
-            rules.forEach(function(rule){ 
+            rules.forEach(function(rule) {
                 
                 if (rule.cssRules){
                     rule.cssRules = cascadeRules(rule.cssRules);
                 }
                 
                 // isDuplicate
-                if (!temp[rule.selectorText]){  
+                if (!temp[rule.selectorText]) {
 
                     // store this selector in the order that was matched
                     // we'll use this to sort rules after the cascade
@@ -317,15 +315,14 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                     
                     // create the reference for cascading into
                     temp[rule.selectorText] = rule;
-                } 
-                else{
+                } else {
                     // cascade rules into the matching selector
                     temp[rule.selectorText] = extend({}, temp[rule.selectorText], rule);
                 }
             });
 
             // expose cascaded rules in the order the parser got them
-            selectors.forEach(function(selectorText){
+            selectors.forEach(function(selectorText) {
                 cascaded.push(temp[selectorText]);
             }, this);
 
@@ -336,21 +333,21 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             return cascaded;
         }
         
-        function extend(target){  
+        function extend(target) {
             var sources = Array.prototype.slice.call(arguments, 1);
-            sources.forEach(function(source){
-                for (var key in source){
+            sources.forEach(function(source) {
+                for (var key in source) {
                     
                     // prevent an infinite loop trying to merge parent rules
                     // TODO: grow a brain and do this more elegantly
-                    if (key === "parentRule"){
+                    if (key === "parentRule") {
                         return;
                     }  
                     
                     // is the property pointing to an object that's not falsy?
-                    if (typeof target[key] === 'object' && target[key]){
+                    if (typeof target[key] === 'object' && target[key]) {
                          // dealing with an array?
-                         if (typeof target[key].slice === "function"){  
+                         if (typeof target[key].slice === "function") {
                              target[key] = cascadeRules(target[key].concat(source[key]));
                          } else {
                          // dealing with an object
@@ -368,7 +365,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
         return {
             cssRules: [],
             
-            parse: function(string){ 
+            parse: function(string) {
                  // inline css text and remove comments
                 string = string.replace(/[\n\t]+/g, "").replace(/\/\*[\s\S]*?\*\//g,'').trim();
                 parseBlocks.call(this, string, this.cssRules);
@@ -381,22 +378,22 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                 @return {null} if invalid css declaration
                 
             */
-            parseCSSDeclaration: function(string){
+            parseCSSDeclaration: function(string) {
                 var set = [];
                 parseBlocks.call(this, string, set);
-                if (set.length && set.length === 1){
+                if (set.length && set.length === 1) {
                     return set.pop();
                 } else {
                     return null;
                 }
             },
             
-            clear: function(){
+            clear: function() {
                 this.cssRules = [];
             },
             
-            cascade: function(rules){   
-                if (!rules || !rules.length){
+            cascade: function(rules) {
+                if (!rules || !rules.length) {
                     // TODO: externalize this rule
                     this.cssRules = cascadeRules.call(this, this.cssRules);
                     return;
@@ -506,10 +503,11 @@ window.CSSRegions = function(scope) {
         },
         
         doLayout: function() {
-            if (!this.namedFlows || !this.namedFlows.length){
+            if (!this.namedFlows || !this.namedFlows.length) {
                 console.warn("No named flow / regions CSS rules");
                 return;
-            }                           
+            }
+            console.log("CSS Regions doLayout()");
             flowContentIntoRegions();
         },
                                    
@@ -524,6 +522,25 @@ window.CSSRegions = function(scope) {
         */
         getNamedFlows: function() {
             return this.namedFlowCollection;
+        },
+
+        addSourceToNamedFlow: function(flowName, el) {
+            var namedFlow = this.getNamedFlows().namedItem(flowName);
+            if (!namedFlow) {
+                namedFlow = new NamedFlow(flowName);
+                this.namedFlows.push(namedFlow);
+                this.namedFlowCollection = new Collection(this.namedFlows, 'name');
+            }
+            namedFlow.contentNodes.push(el);
+        },
+        addRegionToNamedFlow: function(flowName, el) {
+            var namedFlow = this.getNamedFlows().namedItem(flowName);
+            if (!namedFlow) {
+                namedFlow = new NamedFlow(flowName);
+                this.namedFlows.push(namedFlow);
+                this.namedFlowCollection = new Collection(this.namedFlows, 'name');
+            }
+            namedFlow.regions.push(el);
         },
           
         "NamedFlow": NamedFlow,
@@ -604,11 +621,11 @@ window.CSSRegions = function(scope) {
      * @param regions
      */
     var flowContentIntoRegions = function() {
-        var currentRegion, currentFlow, i, l, sourceNodes, destinationNodes, el,
+        var currentRegion, currentFlow, j, m, i, l, sourceNodes, destinationNodes, el,
             flows = document.getNamedFlows();
         
-        for (i = 0; i< flows.length; i++){
-            currentFlow = flows[i];
+        for (j = 0, m = flows.length; j < m; j++){
+            currentFlow = flows[j];
 
             // Build the source to be flown from the region names
             sourceNodes = getNodesForFlow(currentFlow.contentNodes);
@@ -635,6 +652,7 @@ window.CSSRegions = function(scope) {
                     if ((i + 1) === l) {
                         while (el) {
                             currentRegion.appendChild(el.cloneNode(true));
+                            addRegionsByContent(el, -1, currentRegion, currentFlow);
                             el = sourceNodes.shift();
                         }
                         // Check if overflows
@@ -645,7 +663,7 @@ window.CSSRegions = function(scope) {
                         }
                     } else {
                         while (el) {
-                            el = addContentToRegion(el, currentRegion);
+                            el = addContentToRegion(el, currentRegion, currentFlow);
                             if (el) {
                                 // If current region is filled, time to move to the next one
                                 sourceNodes.unshift(el);
@@ -660,21 +678,24 @@ window.CSSRegions = function(scope) {
                 }
             }  
                            
-            // Dispatch regionLayoutUpdate event 
-            currentFlow.fire({type: "regionLayoutUpdate", target: currentFlow});
-            currentFlow.fire({type: "webkitRegionLayoutUpdate", target: currentFlow});
+            // Dispatch regionLayoutUpdate event
+            if (currentFlow.regions.length > 0) {
+                currentFlow.fire({type: "regionlayoutupdate", target: currentFlow});
+                currentFlow.fire({type: "webkitregionlayoutupdate", target: currentFlow});
+                console.log("Dispatch regionlayoutupdate event");
+            }
         }
     };
 
     /**
-     * Adds the elemContent into region. If the content to be consumed overflows out of region,
-     * it returns the overflow part as a DOM element.
+     * Adds the elemContent into region. If the content to be consumed overflows the region
+     * returns the overflow part as a DOM element. If not returns null.
      * @param elemContent
      * @param region
      * @return null or a DOM element
      */
-    var addContentToRegion = function(elemContent, region) {
-        var currentNode, i, l, arrString, txt, indexOverflowPoint,
+    var addContentToRegion = function(elemContent, region, namedFlow) {
+        var currentNode, i, l, arrString, txt, indexOverflowPoint, acceptCondition,
             ret = null,
             nodes = [],
             removedContent = [],
@@ -685,20 +706,19 @@ window.CSSRegions = function(scope) {
         if ( checkForOverflow(region) ) {
             region.removeChild(el);
             // Find all the textNodes, IMG, and FIG
-            nodes = getFilteredDOMElements(
-                        el,
-                        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-                        { acceptNode: function(node) {
-                                    if (node.nodeName.toLowerCase() === 'img'
-                                            || node.nodeName.toLowerCase() === 'fig'
-                                            || (node.nodeName.toLowerCase() === '#text'
-                                                && node.data.replace(/^\s+|\s+$/g,"") !== "")) {
-                                        return NodeFilter.FILTER_ACCEPT;
-                                    } else {
-                                        return NodeFilter.FILTER_SKIP;
-                                    }
-                                }
-                         });
+            nodes = getFilteredDOMElements(el,
+                                    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+                                    { acceptNode: function(node) {
+                                                if (node.nodeName.toLowerCase() === 'img'
+                                                        || node.nodeName.toLowerCase() === 'fig'
+                                                        || (node.nodeName.toLowerCase() === '#text'
+                                                            && node.data.replace(/^\s+|\s+$/g,"") !== "")) {
+                                                    return NodeFilter.FILTER_ACCEPT;
+                                                } else {
+                                                    return NodeFilter.FILTER_SKIP;
+                                                }
+                                            }
+                                     });
             // If it is an image just quit. No way to split this between multiple regions.
             if (nodes.length === 1
                     && (nodes[0].nodeName.toLowerCase() === "img" || nodes[0].nodeName.toLowerCase() === "fig")) {
@@ -732,9 +752,14 @@ window.CSSRegions = function(scope) {
                         arrString = txt.split(" ");
                         l = findMaxIndex(region, el, currentNode, arrString);
                         removedContent[indexOverflowPoint] = buildText(arrString, l, arrString.length - 1);
+                        if (l > 0) {
+                            i = i + 1;
+                        }
                     }
                     region.appendChild(el.cloneNode(true));
                     assembleUnusedContent(indexOverflowPoint, nodes, removedContent);
+                    // Build the RegionsByContent Map for the current NamedFlow
+                    addRegionsByContent(elemContent, i, region, namedFlow);
                     ret = el;
                 }
             }
@@ -742,8 +767,37 @@ window.CSSRegions = function(scope) {
         return ret;
     };
 
+    var addRegionsByContent = function(elemContent, index, region, namedFlow) {
+        var i, arr, nodes, el;
+        nodes = getFilteredDOMElements(elemContent,
+                        NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+                        { acceptNode: function(node) {
+                                    if (node.nodeName.toLowerCase() === 'img'
+                                            || node.nodeName.toLowerCase() === 'fig'
+                                            || (node.nodeName.toLowerCase() === '#text'
+                                                && node.data.replace(/^\s+|\s+$/g,"") !== "")) {
+                                        return NodeFilter.FILTER_ACCEPT;
+                                    } else {
+                                        return NodeFilter.FILTER_SKIP;
+                                    }
+                                }
+                         });
+        if (index < 0) {
+            index = nodes.length;
+        }
+        for (i = 0; i < index; i++) {
+            el = nodes[i];
+            if (el.nodeName.toLowerCase() === "#text") {
+                el = el.parentNode;
+            }
+            arr = namedFlow.regionsByContent[el] || [];
+            arr.push(region);
+            namedFlow.regionsByContent[el] = arr;
+        }
+    };
+
     /**
-     * Finds the max index that allows adding text from arrString to the el without overflowing the container.
+     * Finds the max index that allows adding text from arrString to the el without overflowing the region.
      * @param region
      * @param el
      * @param currentNode
@@ -847,8 +901,14 @@ window.CSSRegions = function(scope) {
         return isOverflowing;
     };
 
-    var EventManager = function() {
-        this._listeners = {};
+//    var onMutations = function(mutations) {
+//        mutations.forEach(function(mutation) {
+//            console.log("Mutations: " + mutation.type);
+//        });
+//    };
+
+    function EventManager() {
+
     };
     EventManager.prototype = {
         constructor: EventManager,
@@ -858,6 +918,7 @@ window.CSSRegions = function(scope) {
               this._listeners[type] = [];
             }
             this._listeners[type].push(listener);
+            polyfill.doLayout();
         },
 
         fire: function(event) {
@@ -950,7 +1011,9 @@ window.CSSRegions = function(scope) {
         this.overset = true;   
         this.contentNodes = [];
         this.regions = [];
-        
+        this.regionsByContent = {};
+        this._listeners = {};
+
         if (contentNodesSelectors && contentNodesSelectors.length) {
             this.contentNodes = orderNodes(contentNodesSelectors);
         }          
@@ -964,9 +1027,13 @@ window.CSSRegions = function(scope) {
     NamedFlow.prototype.constructor = NamedFlow;
     NamedFlow.prototype.getRegions = function() {
         return this.regions;
-    }
+    };
+    NamedFlow.prototype.getRegionsByContent = function(elem) {
+        var ret = this.regionsByContent[elem] || [];
+        return ret;
+    };
       
-    var polyfill;
+    var polyfill, observer;
     
     if (!Modernizr) {
         throw new Error("Modernizr is not loaded!");
@@ -974,10 +1041,18 @@ window.CSSRegions = function(scope) {
 
     if (Modernizr.regions) {
         return;
-    } else{
+    } else {
         polyfill = new Polyfill;
         scope.addEventListener("load", function(){ polyfill.init() });
         scope.addEventListener("resize", function(){ polyfill.doLayout() });
+//        if (WebKitMutationObserver) {
+//            observer = new WebKitMutationObserver(onMutations);
+//        } else if (MutationObserver) {
+//            observer = new MutationObserver(onMutations);
+//        }
+//        if (observer) {
+//            observer.observe(document, { childList: true });
+//        }
     }
     
     return polyfill;

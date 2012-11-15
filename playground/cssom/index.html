@@ -89,15 +89,15 @@ http://creativecommons.org/publicdomain/zero/1.0/
         var flows = document.webkitGetNamedFlows()
         var flow = flows.namedItem("article");
 
-        flow.addEventListener("regionLayoutUpdate", function(e) {
+        flow.addEventListener("regionlayoutupdate", function(e) {
             var art, div;
             if (e.target.overset) {
                 div = document.createElement("div");
                 div.className = "myregions";
                 art = document.getElementById("art");
                 art.appendChild(div);
-                if (CSSRegions) {   
-                    flow.regions.push(div)
+                if (CSSRegions) {
+                    CSSRegions.addRegionToNamedFlow(flow.name, div);
                     CSSRegions.doLayout();
                 }
             }

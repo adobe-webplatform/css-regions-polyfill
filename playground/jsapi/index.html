@@ -42,12 +42,12 @@ http://creativecommons.org/publicdomain/zero/1.0/
             height: auto;
         }
         .region-small-height {
-            height: 200px;
+            height: 150px;
         }
 
         #middle {
             background-color: #b0dcff;
-            height: 200px;
+            height: 150px;
         }
         .buttons {
             border-top: solid 1px #dedede;
@@ -86,7 +86,6 @@ http://creativecommons.org/publicdomain/zero/1.0/
     </article>
     <div class="buttons">
         <button id="toggle">Toggle Visibility</button>
-        <button id="reflow">Reflow Regions</button>
     </div>
 </div>
 <div id="source">
@@ -111,11 +110,7 @@ http://creativecommons.org/publicdomain/zero/1.0/
     btn.addEventListener("click", function(event){
        var d = document.getElementById("middle");
         d.style.display === "none" ? d.style.display = "" : d.style.display = "none" ;
-    });
-
-    btn = document.getElementById("reflow");
-    btn.addEventListener("click", function(event) {
-       if (CSSRegions) {
+        if (CSSRegions) {
            CSSRegions.doLayout();
        }
     });

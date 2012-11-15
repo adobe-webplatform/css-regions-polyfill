@@ -146,13 +146,14 @@
                 if (story.overset) {
                     addPage();
                 } else {
-                    story.removeEventListener("webkitRegionLayoutUpdate", onMainFlowUpdate);
+                    story.removeEventListener("webkitregionlayoutupdate", onMainFlowUpdate);
                     addPullQuotes();
                 }                
             }
 
             function doLayout() {
-                story.addEventListener("webkitRegionLayoutUpdate", onMainFlowUpdate);
+                console.log("doLayout() from page");
+                story.addEventListener("webkitregionlayoutupdate", onMainFlowUpdate);
                 // First, remove the pull-quote styles.
                 var pqStyles = document.getElementsByClassName("pq_style");
                 var head = document.getElementsByTagName("head")[0];
@@ -288,6 +289,19 @@
                 vp.appendChild(pageNumber);
 
                 ++pageCount;
+
+                if (CSSRegions) {
+                    story.regions.push(box_a);
+                    story.regions.push(box_b);
+                    story.regions.push(box_c);
+                    story.regions.push(box_d);
+                    story.regions.push(box_e);
+                    story.regions.push(box_f);
+                    story.regions.push(box_g);
+                    story.regions.push(box_h);
+                    CSSRegions.addRegionToNamedFlow("pq_" + pageCount, pqText);
+                    CSSRegions.doLayout();
+                }
             }
 
             function addPullQuotes() {
@@ -311,10 +325,16 @@
                     quote.setAttribute("id", "pq_text_" + index)
                     quote.style.webkitFlowInto = sibling.firstChild.style["-webkit-flow-from"];
                     quote.innerHTML = pq.innerText;
+                    document.getElementById("viewport").appendChild(quote);
+                    if (CSSRegions) {
+                        CSSRegions.addSourceToNamedFlow("pq_" + index, quote);
+                    }
                     var namedFlows = document.webkitGetNamedFlows();
                     var region = namedFlows.namedItem("pq_"+index);
-                    region.addEventListener("webkitRegionLayoutUpdate", adjustPullQuoteFontSize);
-                    document.getElementById("viewport").appendChild(quote);
+                    region.addEventListener("webkitregionlayoutupdate", adjustPullQuoteFontSize);
+                    if (CSSRegions) {
+                        CSSRegions.doLayout();
+                    }
                 }
             }
 
@@ -335,7 +355,7 @@
                 if (!namedFlow.overset) {
                     changePullQuoteStyle(namedFlow, .1);
                 } else  {
-                    namedFlow.removeEventListener("webkitRegionLayoutUpdate", adjustPullQuoteFontSize);
+                    namedFlow.removeEventListener("webkitregionlayoutupdate", adjustPullQuoteFontSize);
                     changePullQuoteStyle(namedFlow, -.1);
                 }
             }
@@ -380,6 +400,9 @@
 <p>As far as the government is concerned, I&#8217;m a chemical engineer, but my real job is Technical Archivist for the Human Legacy Project. I joined the HLP over 20 years ago, before it was labeled a terrorist organization and banned. I was recruited during the transition from Phase One to Phase Two. The HLP had just started hollowing out a mountain in Ogden, Utah where they were building concrete bunkers for data storage. Since data formats were becoming obsolete every five to ten years, the HLP decided to create their own. That was the only way they could ensure there would always be hardware around that could read them. They had people building the drives, but what they needed was the physical storage media itself. That&#8217;s what I was hired to do: design titanium alloy platters capable of storing the entire legacy of the human race for no less than one thousand years.</p>
 <p>My title is still Technical Archivist, but my role changed when we went underground. I went from working on chemical etching to biomunitions. Biomunitions is the science of violently destabilizing organic compounds. Biomunitions is my legacy. <span class="pull_quote">I&#8217;m the man who figured how to turn humans into bombs.</span></p>
 
+</div>
+
+<!--
 <div class="hr">&sect;</div>
 
 <p><span class="dropcap">T</span>he origins of the Human Legacy Project can be traced back to the origins of humans themselves: the Omo River in southern Ethiopia.</p>
@@ -476,7 +499,7 @@
 <p>Rory is sweating. He isn&#8217;t typing anymore. He&#8217;s trying to figure out what to do. The captain&#8217;s pistol goes off and everyone reacts. My ears are ringing. I see the shell casing eject but I don&#8217;t hear it land. I can&#8217;t see my wife in my peripheral vision anymore. I don&#8217;t turn to look. <span class="pull_quote">Yuuka is screaming and I can see everything I need to see in her.</span></p>
 <p>&#8220;Now you know I&#8217;m not bluffing,&#8221; the captains says calmly. The gun moves to me. &#8220;I&#8217;m going to count to ten, and if you haven&#8217;t figured out how to stop them, he&#8217;s next.&#8221;</p>
 <p>Yuuka is screaming at what she sees on the floor behind me. Rory is trying to focus. The captain starts counting aloud and I close my eyes. I can hear my wife softly gurgling. The scene I just witnessed replays itself in my mind. I picture the impassivity in the captain&#8217;s face and I hear the calm in his voice. I know that he feels nothing right now. I have felt that way, too. <span class="pull_quote">I think about all the things I&#8217;ve done, the thousands of lives I&#8217;ve taken and somehow justified.</span> That&#8217;s when it all begins to make sense to me. I understand what Phase Four is now. As I listen to the captain finish his count, I realize that The Human Legacy Project had never been intended for us. For us, it had always been too late.</p>
-</div>
 
+-->
 </body>
 </html>
