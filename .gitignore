@@ -40,3 +40,5 @@ use-cases/content-folding/.DS_Store
 playground/content-folding/.DS_Store
 
 .DS_Store
+
+*.iml
