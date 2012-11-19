@@ -695,7 +695,7 @@ window.CSSRegions = function(scope) {
      * @return null or a DOM element
      */
     var addContentToRegion = function(elemContent, region, namedFlow) {
-        var currentNode, i, l, arrString, txt, indexOverflowPoint, acceptCondition,
+        var currentNode, i, l, arrString, txt, indexOverflowPoint,
             ret = null,
             nodes = [],
             removedContent = [],

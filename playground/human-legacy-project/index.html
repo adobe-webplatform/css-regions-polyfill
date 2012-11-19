@@ -330,7 +330,7 @@
                         CSSRegions.addSourceToNamedFlow("pq_" + index, quote);
                     }
                     var namedFlows = document.webkitGetNamedFlows();
-                    var region = namedFlows.namedItem("pq_"+index);
+                    region = namedFlows.namedItem("pq_"+index);
                     region.addEventListener("webkitregionlayoutupdate", adjustPullQuoteFontSize);
                     if (CSSRegions) {
                         CSSRegions.doLayout();
