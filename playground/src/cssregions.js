@@ -1043,8 +1043,13 @@ window.CSSRegions = function(scope) {
         return;
     } else {
         polyfill = new Polyfill;
-        scope.addEventListener("load", function(){ polyfill.init() });
-        scope.addEventListener("resize", function(){ polyfill.doLayout() });
+        if (typeof scope.addEventListener !== "undefined") {
+            scope.addEventListener("load", function(){ polyfill.init() });
+            scope.addEventListener("resize", function(){ polyfill.doLayout() });
+        } else {
+            scope.attachEvent("onload", function(){ polyfill.init() });
+            scope.attachEvent("onresize", function(){ polyfill.doLayout() });
+        }
 //        if (WebKitMutationObserver) {
 //            observer = new WebKitMutationObserver(onMutations);
 //        } else if (MutationObserver) {
