@@ -152,18 +152,16 @@ test('Smoke test prefix support', function(){
     ok(nf, 'named flow can be accessed by webkitGetNamedFlows()')
 })
 
-asyncTest('NamedFlow throws regionLayoutUpdate event', function(){
-    // expect one assertion
-    expect(1)              
-    
-    CSSRegions.init()  
+asyncTest('NamedFlow throws regionlayoutupdate event', function(){
+    CSSRegions.init()
     
     var nf = document.getNamedFlows().namedItem('myFlow'),
         region1 = document.querySelector('.region');
-        
-    nf.addEventListener('regionLayoutUpdate', function(e){
+
+    stop()
+    nf.addEventListener('regionlayoutupdate', function(e){
+        equal(e.target.name, 'myFlow')
         start()
-        equal(e.target.name, 'myFlow') 
     })  
     
     // force a relayout
