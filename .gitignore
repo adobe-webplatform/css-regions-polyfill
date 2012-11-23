@@ -44,3 +44,4 @@ playground/content-folding/.DS_Store
 *.iml
 
 .idea/libraries/sass_stdlib.xml
+./node_modules/
