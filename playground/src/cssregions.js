@@ -627,6 +627,7 @@ window.CSSRegions = function(scope) {
         for (j = 0, m = flows.length; j < m; j++){
             currentFlow = flows[j];
             currentFlow.regionsByContent = {content: [], regions: []};
+            currentFlow.firstEmptyRegionIndex = -1;
 
             // Build the source to be flown from the region names
             sourceNodes = getNodesForFlow(currentFlow.contentNodes);
@@ -642,6 +643,9 @@ window.CSSRegions = function(scope) {
                 // We still have to clear the possible content for the remaining regions
                 // even when we don;t have anymore content to flow.
                 if (sourceNodes.length === 0) {
+                    if (currentFlow.firstEmptyRegionIndex === -1) {
+                        currentFlow.firstEmptyRegionIndex = i;
+                    }
                     currentRegion.webKitRegionOverset = "empty";
                     currentRegion.regionOverset = "empty";
                     continue;
@@ -1123,6 +1127,7 @@ window.CSSRegions = function(scope) {
         this.regions = [];
         this.regionsByContent = {};
         this._listeners = {};
+        this.firstEmptyRegionIndex = -1;
 
         if (contentNodesSelectors && contentNodesSelectors.length) {
             this.contentNodes = orderNodes(contentNodesSelectors);
