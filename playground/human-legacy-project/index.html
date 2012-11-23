@@ -152,7 +152,6 @@
             }
 
             function doLayout() {
-                console.log("doLayout() from page");
                 story.addEventListener("webkitregionlayoutupdate", onMainFlowUpdate);
                 // First, remove the pull-quote styles.
                 var pqStyles = document.getElementsByClassName("pq_style");
@@ -299,7 +298,7 @@
                     story.regions.push(box_f);
                     story.regions.push(box_g);
                     story.regions.push(box_h);
-                    CSSRegions.addRegionToNamedFlow("pq_" + pageCount, pqText);
+                    CSSRegions.addRegionToNamedFlow("pq_" + (pageCount-1), pqText);
                     CSSRegions.doLayout();
                 }
             }
@@ -310,6 +309,7 @@
                 for (var i = 0; i < pqs.length; ++i) {
                     var pq = pqs[i];
                     var region = story.getRegionsByContent(pq);
+                    if (region.length === 0) return;
                     for (var sibling = region[0].nextSibling;
                          sibling.getAttribute("class") !== "pull_quote_box";
                          sibling = sibling.nextSibling) {}
@@ -321,17 +321,19 @@
 
                     document.getElementsByTagName("head")[0].appendChild(getPQStyle(index, defaultPullQuoteSize));
 
-                    var quote = document.createElement("div");
-                    quote.setAttribute("id", "pq_text_" + index)
-                    quote.style.webkitFlowInto = sibling.firstChild.style["-webkit-flow-from"];
-                    quote.innerHTML = pq.innerText;
-                    document.getElementById("viewport").appendChild(quote);
-                    if (CSSRegions) {
-                        CSSRegions.addSourceToNamedFlow("pq_" + index, quote);
+                    if (!document.getElementById("pq_text_" + index)) {
+                        var quote = document.createElement("div");
+                        quote.setAttribute("id", "pq_text_" + index);
+                        quote.style.webkitFlowInto = sibling.firstChild.style["-webkit-flow-from"];
+                        quote.innerHTML = pq.innerText;
+                        document.getElementById("viewport").appendChild(quote);
+                        if (CSSRegions) {
+                            CSSRegions.addSourceToNamedFlow("pq_" + index, quote);
+                        }
+                        var namedFlows = document.webkitGetNamedFlows();
+                        region = namedFlows.namedItem("pq_"+index);
+                        region.addEventListener("webkitregionlayoutupdate", adjustPullQuoteFontSize);
                     }
-                    var namedFlows = document.webkitGetNamedFlows();
-                    region = namedFlows.namedItem("pq_"+index);
-                    region.addEventListener("webkitregionlayoutupdate", adjustPullQuoteFontSize);
                     if (CSSRegions) {
                         CSSRegions.doLayout();
                     }
@@ -345,7 +347,7 @@
                 var styleText = "#pq_text_" + index + " {-webkit-flow-into:pq_"+index+";";
                 styleText += "font-size:"+fontSize+"em;";
                 styleText += "font-style:italic;";
-                styleText += "text-align:center;";
+                styleText += "text-align:center;}";
                 pqStyle.innerHTML = styleText;
                 return pqStyle;
             }

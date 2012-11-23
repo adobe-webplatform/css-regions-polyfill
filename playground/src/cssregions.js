@@ -626,6 +626,7 @@ window.CSSRegions = function(scope) {
         
         for (j = 0, m = flows.length; j < m; j++){
             currentFlow = flows[j];
+            currentFlow.regionsByContent = {content: [], regions: []};
 
             // Build the source to be flown from the region names
             sourceNodes = getNodesForFlow(currentFlow.contentNodes);
@@ -699,9 +700,11 @@ window.CSSRegions = function(scope) {
             ret = null,
             nodes = [],
             removedContent = [],
-            el = elemContent.cloneNode(true);
+//            el = elemContent.cloneNode(true);
+            el = elemContent;
 
         region.appendChild(el);
+
         // Oops it overflows. Can we split the content or is it a lost battle?
         if ( checkForOverflow(region) ) {
             region.removeChild(el);
@@ -756,19 +759,91 @@ window.CSSRegions = function(scope) {
                             i = i + 1;
                         }
                     }
-                    region.appendChild(el.cloneNode(true));
-                    assembleUnusedContent(indexOverflowPoint, nodes, removedContent);
+                    region.appendChild(removeEmptyHTMLElements(el.cloneNode(true)));
                     // Build the RegionsByContent Map for the current NamedFlow
-                    addRegionsByContent(elemContent, i, region, namedFlow);
+                    addRegionsByContent(region.lastChild, region, namedFlow);
+                    assembleUnusedContent(indexOverflowPoint, nodes, removedContent, el);
                     ret = el;
                 }
             }
+        } else {
+            addRegionsByContent(el, region, namedFlow);
         }
         return ret;
     };
 
-    var addRegionsByContent = function(elemContent, index, region, namedFlow) {
-        var i, arr, nodes, el;
+    /**
+     * Remove empty HTML elements
+     * @param elem
+     * @return elem
+     */
+    var removeEmptyHTMLElements = function(elem) {
+        var node, nodes, lastContentNode;
+        // Find all the textNodes, IMG, and FIG
+        nodes = getFilteredDOMElements(elem,
+                    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+                    { acceptNode: function(node) {
+                                if (node.nodeName.toLowerCase() === 'img'
+                                        || node.nodeName.toLowerCase() === 'fig'
+                                        || (node.nodeName.toLowerCase() === '#text'
+                                            && node.data.replace(/^\s+|\s+$/g,"") !== "")) {
+                                    return NodeFilter.FILTER_ACCEPT;
+                                } else {
+                                    return NodeFilter.FILTER_SKIP;
+                                }
+                            }
+                     });
+
+        lastContentNode = nodes[nodes.length - 1];
+        node = lastContentNode.nextSibling;
+        while (node) {
+            deleteEmtpyElement(node);
+            node = node.nextSibling;
+        }
+        node = lastContentNode.parentNode.nextSibling;
+        while (node) {
+            deleteEmtpyElement(node);
+            node = node.nextSibling;
+        }
+        node = lastContentNode.parentNode;
+        while (node) {
+            if (node.parentNode === elem) {
+                while (node.nextSibling) {
+                    node.parentNode.removeChild(node.nextSibling);
+                }
+                break;
+            }
+            node = node.parentNode;
+        }
+        return elem;
+    };
+
+    var deleteEmtpyElement = function(elem) {
+        var nodes, i, currentNode;
+        if (elem.nodeName === "#text") {
+            elem.parentNode.removeChild(elem);
+            return;
+        }
+        nodes = elem.childNodes;
+        for (i = nodes.length - 1; i >= 0; i--) {
+            currentNode = nodes.item(i);
+            if (currentNode.nodeName !== "#text") {
+                if (currentNode.childNodes.length === 0) {
+                    currentNode.parentNode.removeChild(currentNode);
+                } else {
+                    deleteEmtpyElement(currentNode);
+                }
+            } else {
+                currentNode.parentNode.removeChild(currentNode);
+            }
+        }
+        if (elem.childNodes.length === 0) {
+            elem.parentNode.removeChild(elem);
+        }
+    };
+
+    var addRegionsByContent = function(elemContent, region, namedFlow) {
+        var i, l, arr, el, k, nodes;
         nodes = getFilteredDOMElements(elemContent,
                         NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
                         { acceptNode: function(node) {
@@ -782,17 +857,22 @@ window.CSSRegions = function(scope) {
                                     }
                                 }
                          });
-        if (index < 0) {
-            index = nodes.length;
+        if (!namedFlow.regionsByContent) {
+            namedFlow.regionsByContent = {content: [], regions: []};
         }
-        for (i = 0; i < index; i++) {
+        for (i = 0, l = nodes.length; i < l; i++) {
             el = nodes[i];
             if (el.nodeName.toLowerCase() === "#text") {
                 el = el.parentNode;
             }
-            arr = namedFlow.regionsByContent[el] || [];
+            k = namedFlow.regionsByContent["content"].indexOf(el);
+            if (k === -1) {
+                namedFlow.regionsByContent["content"].push(el);
+                k = namedFlow.regionsByContent["content"].length - 1;
+            }
+            arr = namedFlow.regionsByContent["regions"][k] || [];
             arr.push(region);
-            namedFlow.regionsByContent[el] = arr;
+            namedFlow.regionsByContent["regions"][k] = arr;
         }
     };
 
@@ -828,20 +908,50 @@ window.CSSRegions = function(scope) {
 
     /**
      * Puts back the content removed in order to fit the parent element in the current region
+     * and deletes the content consumed by the current region.
      * @param indexOverflowPoint
      * @param nodes
      * @param removedContent
      */
-    var assembleUnusedContent = function(indexOverflowPoint, nodes, removedContent) {
-        var currentNode, i, l;
+    var assembleUnusedContent = function(indexOverflowPoint, nodes, removedContent, elem) {
+        var currentNode, i, l, node,
+            arrElements = [];
         // Delete the content that was already consumed by the current region
         for (i = 0; i < indexOverflowPoint; i++) {
             currentNode = nodes[i];
             if (currentNode.nodeName === "#text") {
-                currentNode.data = "";
+                node = currentNode.parentNode;
+                node.removeChild(currentNode);
+                while (node && node.childNodes.length === 0) {
+                    node = node.parentNode;
+                    node.removeChild(node.childNodes.item(0));
+                }
+                if (node) {
+                    arrElements.push(node);
+                }
             } else {
+                arrElements.push(currentNode.parentNode);
                 currentNode.parentNode.removeChild(currentNode);
             }
+        }
+        // Remove empty HTML elements
+        for (i = 0, l = arrElements.length; i < l; i++) {
+            node = arrElements[i];
+            while (node && node.childNodes.length === 0) {
+                node = node.parentNode;
+                if (node)
+                    node.removeChild(node.childNodes.item(0));
+            }
+        }
+        node = nodes[indexOverflowPoint].parentNode;
+        while (node) {
+            if (node.parentNode === elem) {
+                while (node.previousSibling) {
+                    node.parentNode.removeChild(node.previousSibling);
+                }
+                break;
+            }
+            node = node.parentNode;
         }
         // Put back the leftovers not consumed by the current region
         for (i = indexOverflowPoint, l = nodes.length; i < l; i++) {
@@ -1029,11 +1139,16 @@ window.CSSRegions = function(scope) {
         return this.regions;
     };
     NamedFlow.prototype.getRegionsByContent = function(elem) {
-        var ret = this.regionsByContent[elem] || [];
+        var k, ret = [];
+        k = this.regionsByContent["content"].indexOf(elem);
+        if (k !== -1) {
+            ret = this.regionsByContent["regions"][k];
+        }
         return ret;
     };
       
-    var polyfill, observer;
+    var polyfill;
+//    , observer;
     
     if (!Modernizr) {
         throw new Error("Modernizr is not loaded!");
