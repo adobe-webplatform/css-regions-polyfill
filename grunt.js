@@ -5,7 +5,7 @@ module.exports = function(grunt) {
       
       concat: {
         dist: {
-          src: ['playground/src/cssregions.js'],
+          src: ['src/cssregions.js'],
           dest: '<%= pkg.name %>.js'
         }
       },
@@ -19,7 +19,7 @@ module.exports = function(grunt) {
       
       watch: {
           js: {
-              files: ['playground/src/cssregions.js'],
+              files: ['src/cssregions.js'],
               tasks: 'concat min'
           }
       }
