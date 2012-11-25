@@ -20,7 +20,7 @@ module.exports = function(grunt) {
       watch: {
           js: {
               files: ['playground/src/cssregions.js'],
-              tasks: 'concat'
+              tasks: 'concat min'
           }
       }
     });
