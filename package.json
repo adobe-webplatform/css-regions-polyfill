@@ -1,11 +1,14 @@
 {
-  "name": "cssregions-polyfill",
+  "name": "cssregions",
   "description": "JavaScript library to add support for CSS Regions",
   "version": "0.0.1",
   "author": {
-    "name": "Mihai Corlan (mcorlan@adobe.com)",
-    "name": "Razvan Caliman (rcaliman@adobe.com)"
+    "name": "Adobe Systems Inc."
   },
+  "contributors": [
+    "Mihai Corlan <mcorlan@adobe.com> (http://corlan.org/)",
+    "Razvan Caliman <rcaliman@adobe.com> (http://razvancaliman.com/)"
+  ],
   "licenses": [
     {
       "type": "MIT"
