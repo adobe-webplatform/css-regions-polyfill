@@ -12,9 +12,9 @@ http://creativecommons.org/publicdomain/zero/1.0/
     <meta charset='UTF-8'>
     <title>Complex Content Flow Example</title>
 
+    <link rel="stylesheet" href="../support.css" />
     <script src="../modernizr.custom.regions.js"></script>
-    <script src="../src/cssregions.js"></script>
-    <script src="../scripts/test.js"></script>
+    <script src="../../cssregions.js"></script>
 
     <style>
         body {
@@ -100,16 +100,12 @@ http://creativecommons.org/publicdomain/zero/1.0/
             width: 98%;
         }
 
-        p.cssregions, p.no-cssregions { display: none; }
-        .cssregions-test p.cssregions { color: green; display: block; }
-        .no-cssregions-test p.no-cssregions { color: red; display: block; }
     </style>
 </head>
 <body>
 <div>
     <h1>Complex Content Flow Example</h1>
-    <p class="cssregions">Your browser supports CSS regions.</p>
-    <p class="no-cssregions">Your browser does not support CSS regions.</p>
+
     <div>
         <div class="left main">
             <p>Using CSS Regions, a designer is able to position an image in box ‘A’ and to flow an article's content from box ‘1’ through boxes ‘2’, ‘3’ and ‘4’.</p>

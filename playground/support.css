@@ -1,0 +1,20 @@
+/* 
+    Styles to visually inform the user of CSS Regions support
+    Modernizr adds .regions or .no-regions on <html> based on its test result.
+*/
+html.regions body::before,
+html.no-regions body::before {
+    display: block;
+    width: 100%;
+    height: 20px;
+}
+
+html.regions body::before{
+    content: "Your browser has support for CSS Regions";
+    color: green;
+}
+html.no-regions body::before{
+    content: "Your browser does not support CSS Regions";
+    color: red;
+}
+

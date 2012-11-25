@@ -12,9 +12,9 @@ http://creativecommons.org/publicdomain/zero/1.0/
     <meta charset='UTF-8'>
     <title>JS API Example</title>
 
+    <link rel="stylesheet" href="../support.css" />
     <script src="../modernizr.custom.regions.js"></script>
-    <script src="../src/cssregions.js"></script>
-    <script src="../scripts/test.js"></script>
+    <script src="../../cssregions.js"></script>
 
     <style>
         body {
@@ -60,20 +60,12 @@ http://creativecommons.org/publicdomain/zero/1.0/
             line-height: 1.6em;
         }
 
-        p.cssregions, p.no-cssregions { display: none; }
-        .cssregions-test p.cssregions { color: green; display: block; }
-        .no-cssregions-test p.no-cssregions { color: red; display: block; }
-        button {
-            /*font-size: 0.9em;*/
-
-        }
     </style>
 </head>
 <body>
 <div>
     <h1>JS API Example</h1>
-    <p class="cssregions">Your browser supports CSS regions.</p>
-    <p class="no-cssregions">Your browser does not support CSS regions.</p>
+
     <p>
         In this example you can see how you can use the API of this library to force a new layout of the regions
         programmatically. You can display on/off the blue region and then click the Reflow Regions button to trigger the
