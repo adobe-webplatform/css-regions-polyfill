@@ -6,7 +6,7 @@ Prototype library for using [CSS Regions](http://html.adobe.com/webstandards/css
 
 Include the polyfill script in your page
 <pre>
-&lt;script src='playground/src/cssregions.js'&gt;&lt;/script&gt;
+&lt;script src='cssregions.js'&gt;&lt;/script&gt;
 </pre>
 
 Use standard CSS regions syntax on the same page.
@@ -100,14 +100,10 @@ Learn more from the [Testem docs](https://github.com/airportyh/testem/blob/maste
 
 ## License information
 
+The code in this repository implies and respects different licenses. This is a quick overview. For details check each folder's corresponding LICENSE.md file.
+
 - MIT for polyfill
 - Public Domain for tests, demos and docs 
+- Third party assets under their own licenses
 
-The code in this repository implies and respects different licenses. This is a quick overview.
-For details check each folder's corresponding LICENSE.md file.
-
-The code for the prototype, located under the playground/src/ folder, is available under the [MIT license](http://www.opensource.org/licenses/mit-license.php).
-
-The samples code and content, test files and documentation, unless otherwise specified, are available under the [Public Domain License](http://creativecommons.org/publicdomain/zero/1.0/).
-
-Third party assets are licensed accordingly in their respective folders.
+See LICENSE_INFORMATION.md for details.
