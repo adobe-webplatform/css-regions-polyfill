@@ -4,10 +4,10 @@ module.exports = function(grunt) {
       pkg: '<json:package.json>',
       
       concat: {
-        dist: {
-          src: ['src/cssregions.js'],
-          dest: '<%= pkg.name %>.js'
-        }
+          dist: {
+              src: ['src/cssregions.js'],
+              dest: '<%= pkg.name %>.js'
+          }
       },
       
       min: {
@@ -26,5 +26,6 @@ module.exports = function(grunt) {
     });
     
     grunt.registerTask('default', 'concat min');
+    grunt.registerTask('build', 'concat min');
     
 };

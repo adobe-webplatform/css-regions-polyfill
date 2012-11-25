@@ -28,6 +28,32 @@ Use standard CSS regions syntax on the same page.
 The `#content` will be extracted and split across `.region` elements. Regions should be block elements and have explicit dimensions for the polyfill to work.
 
 
+## Contributing
+
+**DO NOT directly modify the `cssregions.js` or `cssregion.min.js` files in the project root.** These files are automatically generated from files located under `src/` directory.
+
+The project uses [grunt](http://gruntjs.com) to automate the build process.
+
+
+Grunt depends on [Node.js](http://nodejs.org/) and [npm](https://npmjs.org/). 
+
+
+Install grunt:
+```
+npm install -g grunt
+```
+
+Tell grunt to watch for changes and automatically build `cssregions.js` and `cssregion.min.js`:
+```
+cd ./path/to/polyfill/
+grunt watch
+```
+
+To do a one-time build run:
+```
+grunt build
+```
+
 ## Testing
 
 The polyfill has a [QUnit](https://github.com/jquery/qunit) test suite in the `/test/` folder. New code should include at least one test.
@@ -46,7 +72,7 @@ git submodule update --init
 
 [Testem](https://github.com/airportyh/testem) automatically runs the QUnit suite across browsers as you make changes. A configuration is provided in `/testem.json`. Testem is optional, but [pretty cool](http://net.tutsplus.com/tutorials/javascript-ajax/make-javascript-testing-fun-with-testem/).
 
-Testem requires [NodeJS](http://nodejs.org/) and [npm](https://npmjs.org/). 
+Testem depends on [NodeJS](http://nodejs.org/) and [npm](https://npmjs.org/). 
 
 **Install Testem**
 
