@@ -30,7 +30,7 @@ The `#content` will be extracted and split across `.region` elements. Regions sh
 
 ## Contributing
 
-**DO NOT directly modify the `cssregions.js` or `cssregion.min.js` files in the project root.** These files are automatically built from components located under the `src/` directory.
+**DO NOT directly modify the `cssregions.js` or `cssregions.min.js` files in the project root.** These files are automatically built from components located under the `src/` directory.
 
 The project uses [Grunt](http://gruntjs.com) to automate the build process.
 
@@ -43,13 +43,13 @@ Grunt depends on [Node.js](http://nodejs.org/) and [npm](https://npmjs.org/).
 npm install -g grunt
 ```
 
-Tell Grunt to watch for changes and automatically build `cssregions.js` and `cssregion.min.js`:
+Tell Grunt to watch for changes and automatically build `cssregions.js` and `cssregions.min.js`:
 ```
 cd ./path/to/polyfill/
 grunt watch
 ```
 
-While `grunt watch` is running, every time you make changes to components under `src/` the main files, `cssregions.js` and `cssregion.min.js`, are built and written to the project root.
+While `grunt watch` is running, every time you make changes to components under `src/` the main files, `cssregions.js` and `cssregions.min.js`, are built and written to the project root.
 
 To do a one-time build run:
 ```
