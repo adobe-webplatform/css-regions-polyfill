@@ -30,24 +30,26 @@ The `#content` will be extracted and split across `.region` elements. Regions sh
 
 ## Contributing
 
-**DO NOT directly modify the `cssregions.js` or `cssregion.min.js` files in the project root.** These files are automatically generated from files located under `src/` directory.
+**DO NOT directly modify the `cssregions.js` or `cssregion.min.js` files in the project root.** These files are automatically built from components located under the `src/` directory.
 
-The project uses [grunt](http://gruntjs.com) to automate the build process.
+The project uses [Grunt](http://gruntjs.com) to automate the build process.
 
 
 Grunt depends on [Node.js](http://nodejs.org/) and [npm](https://npmjs.org/). 
 
 
-Install grunt:
+**Install Grunt**
 ```
 npm install -g grunt
 ```
 
-Tell grunt to watch for changes and automatically build `cssregions.js` and `cssregion.min.js`:
+Tell Grunt to watch for changes and automatically build `cssregions.js` and `cssregion.min.js`:
 ```
 cd ./path/to/polyfill/
 grunt watch
 ```
+
+While `grunt watch` is running, every time you make changes to components under `src/` the main files, `cssregions.js` and `cssregion.min.js`, are built and written to the project root.
 
 To do a one-time build run:
 ```
@@ -60,17 +62,25 @@ The polyfill has a [QUnit](https://github.com/jquery/qunit) test suite in the `/
 
 ### Requirements
 
-**QUnit git submodule** 
+**Setup QUnit** 
 
-Open the polyfill directory and sync the QUnit git sumbmodule with:
+QUnit is linked as a git submodule to this project. Submodules need to be sync-ed before the first test run.
+
+
+Go to the project root directory and sync the git sumbmodules (includes QUnit):
 ```
 cd ./path/to/polyfill/
 git submodule update --init
-```                          
+```
+
+**Run the tests**
+
+Open the `test/index.html` file in a browser. This runs the QUnit test suite. Refresh compulsively after making changes to project files. You can automatically run the test suite with other tools. See below.
+
 
 ### Optionals
 
-[Testem](https://github.com/airportyh/testem) automatically runs the QUnit suite across browsers as you make changes. A configuration is provided in `/testem.json`. Testem is optional, but [pretty cool](http://net.tutsplus.com/tutorials/javascript-ajax/make-javascript-testing-fun-with-testem/).
+[Testem](https://github.com/airportyh/testem) automatically runs the QUnit suite across browsers as you make changes to the files. A configuration is provided in `/testem.json`. Testem is optional, but [pretty cool](http://net.tutsplus.com/tutorials/javascript-ajax/make-javascript-testing-fun-with-testem/).
 
 Testem depends on [NodeJS](http://nodejs.org/) and [npm](https://npmjs.org/). 
 
@@ -83,7 +93,7 @@ Testem depends on [NodeJS](http://nodejs.org/) and [npm](https://npmjs.org/).
 cd ./path/to/polyfill/
 testem
 ```     
-This command will open up the browsers specified in the `testem.json` config file and run the test suite located at `/test/index.html`. As you make changes to any of the files, Testem will rerun the tests.
+This command will open up the browsers specified in the `testem.json` config file and run the test suite located at `/test/index.html`. As you make changes to any of the files, Testem will re-run the tests.
 
 Learn more from the [Testem docs](https://github.com/airportyh/testem/blob/master/README.md)
 
