@@ -1153,8 +1153,7 @@ window.CSSRegions = function(scope) {
     };
       
     var polyfill;
-//    , observer;
-    
+
     if (!Modernizr) {
         throw new Error("Modernizr is not loaded!");
     }
@@ -1170,14 +1169,6 @@ window.CSSRegions = function(scope) {
             scope.attachEvent("onload", function(){ polyfill.init() });
             scope.attachEvent("onresize", function(){ polyfill.doLayout() });
         }
-//        if (WebKitMutationObserver) {
-//            observer = new WebKitMutationObserver(onMutations);
-//        } else if (MutationObserver) {
-//            observer = new MutationObserver(onMutations);
-//        }
-//        if (observer) {
-//            observer.observe(document, { childList: true });
-//        }
     }
     
     return polyfill;
