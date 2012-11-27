@@ -507,8 +507,16 @@ window.CSSRegions = function(scope) {
                 console.warn("No named flow / regions CSS rules");
                 return;
             }
-            console.log("CSS Regions doLayout()");
-            flowContentIntoRegions();
+            executionQueue++;
+            if (executionQueue > 1) {
+                return;
+            }
+            while (executionQueue > 0) {
+                var tmp = new Date().getTime();
+                flowContentIntoRegions();
+                executionQueue--;
+                console.log("CSS Regions doLayout() executed in: " + (new Date().getTime() - tmp));
+            }
         },
                                    
         // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
@@ -546,6 +554,8 @@ window.CSSRegions = function(scope) {
         "NamedFlow": NamedFlow,
         "Collection": Collection
     }
+
+    var executionQueue = 0;
 
     /**
      * Returns the nodes ordered by their DOM order
@@ -682,12 +692,10 @@ window.CSSRegions = function(scope) {
                     }
                 }
             }  
-                           
             // Dispatch regionLayoutUpdate event
             if (currentFlow.regions.length > 0) {
                 currentFlow.fire({type: "regionlayoutupdate", target: currentFlow});
                 currentFlow.fire({type: "webkitregionlayoutupdate", target: currentFlow});
-                console.log("Dispatch regionlayoutupdate event");
             }
         }
     };
@@ -700,11 +708,11 @@ window.CSSRegions = function(scope) {
      * @return null or a DOM element
      */
     var addContentToRegion = function(elemContent, region, namedFlow) {
-        var currentNode, i, l, arrString, txt, indexOverflowPoint,
+        var currentNode, l, arrString, txt,
+            indexOverflowPoint = -1,
             ret = null,
             nodes = [],
             removedContent = [],
-//            el = elemContent.cloneNode(true);
             el = elemContent;
 
         region.appendChild(el);
@@ -732,36 +740,17 @@ window.CSSRegions = function(scope) {
                 ret = elemContent;
             // Let's try to do some splitting of the elemContent maybe we can fit a part of it in the current region.
             } else {
-                // Let's see if we can fit the content if we remove some of the textNodes/images
-                for (i = nodes.length - 1; i >= 0; i--) {
-                    currentNode = nodes[i];
-                    if (currentNode.nodeName === "#text") {
-                        removedContent[i] = currentNode.data;
-                        currentNode.data = "";
-                    } else {
-                        removedContent[i] = currentNode.parentNode;
-                        currentNode.parentNode.removeChild(currentNode);
-                    }
-                    region.appendChild(el);
-                    if ( !checkForOverflow(region) ) {  // We found a node that triggers the overflow
-                        indexOverflowPoint = i;
-                        region.removeChild(el);
-                        break;
-                    }
-                    region.removeChild(el);
-                }
-
-                if (i < 0 ) {   // We couldn't find a way to split the content
+                // Let's see if we can fit the content if we remove some of the nodes
+                indexOverflowPoint = findIndexForOverflowPoint(region, el, nodes, removedContent);
+                if (indexOverflowPoint < 0 ) {   // We couldn't find a way to split the content
                     ret = elemContent;
                 } else {        // Try splitting the TextNode content to fit in
+                    currentNode = nodes[indexOverflowPoint];
                     if (currentNode.nodeName === "#text") {
                         txt = removedContent[indexOverflowPoint].replace(/^\s+|\s+$/g,"");
                         arrString = txt.split(" ");
                         l = findMaxIndex(region, el, currentNode, arrString);
                         removedContent[indexOverflowPoint] = buildText(arrString, l, arrString.length - 1);
-                        if (l > 0) {
-                            i = i + 1;
-                        }
                     }
                     region.appendChild(removeEmptyHTMLElements(el.cloneNode(true)));
                     // Build the RegionsByContent Map for the current NamedFlow
@@ -774,6 +763,60 @@ window.CSSRegions = function(scope) {
             addRegionsByContent(el, region, namedFlow);
         }
         return ret;
+    };
+
+    var findIndexForOverflowPoint = function(region, el, nodes, removedContent) {
+        var currentNode, j, l, m,
+            i = nodes.length,
+            k = nodes.length,
+            iMin = 0,
+            iMax = nodes.length - 1;
+
+        while (iMax >= iMin) {
+            l = iMin + Math.round((iMax - iMin) / 2);
+            for (i = l; i < k; i++ ) {
+                currentNode = nodes[i];
+                if (currentNode.nodeName === "#text") {
+                    if (currentNode.data !== "") {
+                        removedContent[i] = currentNode.data;
+                        currentNode.data = "";
+                    } else {
+                        break;
+                    }
+                } else {
+                    if (currentNode.parentNode) {
+                        removedContent[i] = currentNode.parentNode;
+                        currentNode.parentNode.removeChild(currentNode);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            region.appendChild(el);
+            if ( checkForOverflow(region) ) {
+                iMax =  l - 1;
+                if (iMax < iMin) {
+                    iMin = iMax;
+                }
+            } else {
+                iMin = l + 1;
+                if (iMax >= iMin) {
+                    m = iMin + Math.round((iMax - iMin) / 2) + 1;
+                    // Put back content that was removed
+                    for (j = l; j < m; j++) {
+                        currentNode = nodes[j];
+                        if (currentNode.nodeName === "#text") {
+                            currentNode.data = removedContent[j];
+                        } else {
+                            removedContent[j].appendChild(currentNode);
+                        }
+                        delete(removedContent[j]);
+                    }
+                }
+            }
+            region.removeChild(el);
+        }
+        return l;
     };
 
     /**
