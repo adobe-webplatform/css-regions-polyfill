@@ -643,7 +643,7 @@ window.CSSRegions = function(scope) {
      * @param regions
      */
     var flowContentIntoRegions = function() {
-        var currentRegion, currentFlow, j, m, i, l, destinationNodes, el, tmp,
+        var currentRegion, currentFlow, j, m, i, l, destinationNodes, el, tmp, nextSibling,
             sourceNodes = [],
             flows = document.getNamedFlows();
         
@@ -686,6 +686,7 @@ window.CSSRegions = function(scope) {
                     el = sourceNodes.shift();
                     // The last region gets all the remaining content
                     if ((i + 1) === l) {
+                        nextSibling = currentRegion.nextSibling || null;
                         tmp = currentRegion.parentNode;
                         tmp.removeChild(currentRegion);
                         while (el) {
@@ -693,7 +694,12 @@ window.CSSRegions = function(scope) {
                             addRegionsByContent(el, -1, currentRegion, currentFlow);
                             el = sourceNodes.shift();
                         }
-                        tmp.appendChild(currentRegion);
+                        if (nextSibling) {
+                            tmp.insertBefore(currentRegion, nextSibling);
+                            nextSibling = null;
+                        } else {
+                            tmp.appendChild(currentRegion);
+                        }
                         tmp = null;
                         currentFlow.lastRegionWithContentIndex = i;
                         // Check if overflows

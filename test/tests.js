@@ -168,3 +168,5 @@ asyncTest('NamedFlow throws regionlayoutupdate event', function(){
     region1.style = "width: 50px"
     CSSRegions.doLayout()
 })
+
+
