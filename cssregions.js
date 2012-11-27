@@ -672,7 +672,7 @@ window.CSSRegions = function(scope) {
                 currentRegion = destinationNodes[i];
                 currentRegion.innerHTML = "";
                 // We still have to clear the possible content for the remaining regions
-                // even when we don;t have anymore content to flow.
+                // even when we don't have anymore content to flow.
                 if (sourceNodes.length === 0) {
                     if (currentFlow.firstEmptyRegionIndex === -1) {
                         currentFlow.firstEmptyRegionIndex = i;
@@ -1239,7 +1239,7 @@ window.CSSRegions = function(scope) {
         return ret;
     };
       
-    var polyfill;
+    var polyfill, timeoutId;
 
     if (!Modernizr) {
         throw new Error("Modernizr is not loaded!");
@@ -1251,10 +1251,26 @@ window.CSSRegions = function(scope) {
         polyfill = new Polyfill;
         if (typeof scope.addEventListener !== "undefined") {
             scope.addEventListener("load", function(){ polyfill.init(); });
-            scope.addEventListener("resize", function(){ invalidateRegions(); polyfill.doLayout(); });
+            scope.addEventListener("resize",
+                function(){
+                    window.clearTimeout(timeoutId);
+                    timeoutId = window.setTimeout(function() {
+                            invalidateRegions();
+                            polyfill.doLayout();
+                        },
+                        300);
+                });
         } else {
             scope.attachEvent("onload", function(){ polyfill.init(); });
-            scope.attachEvent("onresize", function(){ polyfill.doLayout(); });
+            scope.attachEvent("onresize",
+                            function(){
+                                window.clearTimeout(timeoutId);
+                                timeoutId = window.setTimeout(function() {
+                                        invalidateRegions();
+                                        polyfill.doLayout();
+                                    },
+                                    300);
+                            });
         }
     }
     

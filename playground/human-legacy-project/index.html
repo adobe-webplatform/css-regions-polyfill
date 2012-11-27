@@ -134,9 +134,16 @@
                 story;
 
             function init() {
-                window.addEventListener("resize", doLayout);
+                var timeoutId, namedFlows;
+                window.addEventListener("resize",
+                        function() {
+                            window.clearTimeout(timeoutId);
+                            timeoutId = window.setTimeout(function() {
+                                doLayout();
+                            }, 300);
+                        });
                 window.addEventListener("keydown", onKeyDown);
-                var namedFlows = document.webkitGetNamedFlows();
+                namedFlows = document.webkitGetNamedFlows();
                 story = namedFlows.namedItem("story");
                 doLayout();
             }
