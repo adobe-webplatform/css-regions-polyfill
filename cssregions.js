@@ -686,11 +686,15 @@ window.CSSRegions = function(scope) {
                     el = sourceNodes.shift();
                     // The last region gets all the remaining content
                     if ((i + 1) === l) {
+                        tmp = currentRegion.parentNode;
+                        tmp.removeChild(currentRegion);
                         while (el) {
                             currentRegion.appendChild(el.cloneNode(true));
                             addRegionsByContent(el, -1, currentRegion, currentFlow);
                             el = sourceNodes.shift();
                         }
+                        tmp.appendChild(currentRegion);
+                        tmp = null;
                         currentFlow.lastRegionWithContentIndex = i;
                         // Check if overflows
                         if (checkForOverflow(currentRegion)) {
@@ -799,7 +803,7 @@ window.CSSRegions = function(scope) {
 
         while (iMax >= iMin) {
             l = iMin + Math.round((iMax - iMin) / 2);
-            for (i = l; i < k; i++ ) {
+            for (i = l; i < k; i++ ) { // Remove content
                 currentNode = nodes[i];
                 if (currentNode.nodeName === "#text") {
                     if (currentNode.data !== "") {
