@@ -540,6 +540,7 @@ window.CSSRegions = function(scope) {
                 this.namedFlowCollection = new Collection(this.namedFlows, 'name');
             }
             namedFlow.contentNodes.push(el);
+            regionsValidFlag[namedFlow.name] = false;
         },
         addRegionToNamedFlow: function(flowName, el) {
             var namedFlow = this.getNamedFlows().namedItem(flowName);
@@ -549,6 +550,7 @@ window.CSSRegions = function(scope) {
                 this.namedFlowCollection = new Collection(this.namedFlows, 'name');
             }
             namedFlow.regions.push(el);
+            regionsValidFlag[namedFlow.name] = false;
         },
           
         "NamedFlow": NamedFlow,
@@ -556,6 +558,7 @@ window.CSSRegions = function(scope) {
     }
 
     var executionQueue = 0;
+    var regionsValidFlag = {};
 
     /**
      * Returns the nodes ordered by their DOM order
@@ -613,13 +616,22 @@ window.CSSRegions = function(scope) {
      * @param regions
      * @return {Array}
      */
-    var getRegionsForFlow = function(regions) {
+    var getRegionsForFlow = function(regions, namedFlow) {
         var i, l, el,
             destinationNodes = [];
         for (i = 0, l = regions.length; i < l; i++) {
             el = regions[i];
             if (getComputedStyle(el).display !== "none") {
                 destinationNodes.push(el);
+                el["data-display"] = true;
+                if (namedFlow.lastRegionWithContentIndex < i
+                        && ( el["data-w"] !== getComputedStyle(el).width
+                               || el["data-h"] !== getComputedStyle(el).height) ) {
+                    invalidateRegions([namedFlow.name]);
+                }
+            } else if (el["data-display"]) {
+                invalidateRegions([namedFlow.name]);
+                delete(el["data-display"]);
             }
         }
         return destinationNodes;
@@ -631,20 +643,29 @@ window.CSSRegions = function(scope) {
      * @param regions
      */
     var flowContentIntoRegions = function() {
-        var currentRegion, currentFlow, j, m, i, l, sourceNodes, destinationNodes, el,
+        var currentRegion, currentFlow, j, m, i, l, destinationNodes, el, tmp,
+            sourceNodes = [],
             flows = document.getNamedFlows();
         
-        for (j = 0, m = flows.length; j < m; j++){
+        for (j = 0, m = flows.length; j < m; j++) {
             currentFlow = flows[j];
             currentFlow.regionsByContent = {content: [], regions: []};
             currentFlow.firstEmptyRegionIndex = -1;
 
-            // Build the source to be flown from the region names
-            sourceNodes = getNodesForFlow(currentFlow.contentNodes);
             // Remove regions with display:none;
-            destinationNodes = getRegionsForFlow(currentFlow.getRegions());
-                         
+            destinationNodes = getRegionsForFlow(currentFlow.getRegions(), currentFlow);
             currentFlow.overset = false;
+            
+            if (regionsValidFlag[currentFlow.name]) { // Can we skip some of the layout?
+                tmp = destinationNodes[currentFlow.lastRegionWithContentIndex].childNodes;
+                for (i = 0, l = tmp.length; i < l; ++i) {
+                    sourceNodes.push(tmp[i]);
+                }
+                i = currentFlow.lastRegionWithContentIndex;
+            } else { // Build the source to be flown from the region names
+                sourceNodes = getNodesForFlow(currentFlow.contentNodes);
+                i = 0;
+            }
 
             // Flow the source into regions
             for (i = 0, l = destinationNodes.length; i < l; i++) {
@@ -670,6 +691,7 @@ window.CSSRegions = function(scope) {
                             addRegionsByContent(el, -1, currentRegion, currentFlow);
                             el = sourceNodes.shift();
                         }
+                        currentFlow.lastRegionWithContentIndex = i;
                         // Check if overflows
                         if (checkForOverflow(currentRegion)) {
                             currentRegion.webKitRegionOverset = "overset";
@@ -679,6 +701,8 @@ window.CSSRegions = function(scope) {
                     } else {
                         while (el) {
                             el = addContentToRegion(el, currentRegion, currentFlow);
+                            currentRegion["data-w"] = getComputedStyle(currentRegion).width;
+                            currentRegion["data-h"] = getComputedStyle(currentRegion).height;
                             if (el) {
                                 // If current region is filled, time to move to the next one
                                 sourceNodes.unshift(el);
@@ -691,6 +715,7 @@ window.CSSRegions = function(scope) {
                         currentRegion.regionOverset = "fit";
                     }
                 }
+                regionsValidFlag[currentFlow.name] = true;
             }  
             // Dispatch regionLayoutUpdate event
             if (currentFlow.regions.length > 0) {
@@ -1058,11 +1083,19 @@ window.CSSRegions = function(scope) {
         return isOverflowing;
     };
 
-//    var onMutations = function(mutations) {
-//        mutations.forEach(function(mutation) {
-//            console.log("Mutations: " + mutation.type);
-//        });
-//    };
+    var invalidateRegions = function(arr) {
+        var j, m, flows;
+        if (arr && arr.length) {
+            arr.forEach(function(key){
+                regionsValidFlag[key] = false;
+            });
+        } else {
+            flows = document.getNamedFlows();
+            for (j = 0, m = flows.length; j < m; j++) {
+                regionsValidFlag[flows[j].name] = false;
+            }
+        }
+    };
 
     function EventManager() {
 
@@ -1120,19 +1153,19 @@ window.CSSRegions = function(scope) {
     function Collection(arr, key) {
         var i, l;
 
-        if (typeof arr.pop != 'function' ){
+        if (typeof arr.pop != 'function' ) {
             throw "Invalid input. Expected an array, got: " + typeof arr;
         }                   
         
         this.map = {};
         this.length = 0;
         
-        for (i = 0, l = arr.length; i < l; i++){
+        for (i = 0, l = arr.length; i < l; i++) {
             this[i] = arr[i];
             this.length++;
             
             // build a map indexed with specified object key for quick access
-            if (key && arr[i][key]){    
+            if (key && arr[i][key]) {
                 this.map[arr[i][key]] = this[i];
             }
         }
@@ -1171,6 +1204,7 @@ window.CSSRegions = function(scope) {
         this.regionsByContent = {};
         this._listeners = {};
         this.firstEmptyRegionIndex = -1;
+        this.lastRegionWithContentIndex = -1;
 
         if (contentNodesSelectors && contentNodesSelectors.length) {
             this.contentNodes = orderNodes(contentNodesSelectors);
@@ -1206,11 +1240,11 @@ window.CSSRegions = function(scope) {
     } else {
         polyfill = new Polyfill;
         if (typeof scope.addEventListener !== "undefined") {
-            scope.addEventListener("load", function(){ polyfill.init() });
-            scope.addEventListener("resize", function(){ polyfill.doLayout() });
+            scope.addEventListener("load", function(){ polyfill.init(); });
+            scope.addEventListener("resize", function(){ invalidateRegions(); polyfill.doLayout(); });
         } else {
-            scope.attachEvent("onload", function(){ polyfill.init() });
-            scope.attachEvent("onresize", function(){ polyfill.doLayout() });
+            scope.attachEvent("onload", function(){ polyfill.init(); });
+            scope.attachEvent("onresize", function(){ polyfill.doLayout(); });
         }
     }
     
