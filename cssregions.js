@@ -655,7 +655,7 @@ window.CSSRegions = function(scope) {
             // Remove regions with display:none;
             destinationNodes = getRegionsForFlow(currentFlow.getRegions(), currentFlow);
             currentFlow.overset = false;
-            
+
             if (regionsValidFlag[currentFlow.name]) { // Can we skip some of the layout?
                 tmp = destinationNodes[currentFlow.lastRegionWithContentIndex].childNodes;
                 for (i = 0, l = tmp.length; i < l; ++i) {
@@ -668,7 +668,7 @@ window.CSSRegions = function(scope) {
             }
 
             // Flow the source into regions
-            for (i = 0, l = destinationNodes.length; i < l; i++) {
+            for (l = destinationNodes.length; i < l; i++) {
                 currentRegion = destinationNodes[i];
                 currentRegion.innerHTML = "";
                 // We still have to clear the possible content for the remaining regions

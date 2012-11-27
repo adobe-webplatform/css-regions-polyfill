@@ -367,6 +367,7 @@
                 var regionId = "pq_box_" + index;
                 var region = document.getElementById(regionId);
                 var style = document.getElementById("pq_style_"+index);
+                if (!style) return;
                 var styleHTML = style.innerHTML;
                 var fontSize = styleHTML.match(/font-size:(\d+(\.\d)?)em/)[1];
                 var newFontSize = Math.round((parseFloat(fontSize) + delta) * 10) / 10;
