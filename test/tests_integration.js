@@ -91,3 +91,33 @@ asyncTest("Non-linear Content Flow demo", function(){
         equal(regions.item(4).childNodes[0].id, 'source', 'The last region has content from #source')
     }) 
 })
+
+module('Tests for Flow Content Algorithm', {
+    teardown: function(){
+        fixture = document.getElementById('qunit-fixture')
+        fixture.innerHTML = ''
+    }
+})
+
+asyncTest("Whole Text was fitted", function(){
+    setup("../playground/text-nodes/index-test.html", '500px')
+
+    var iframe = document.getElementById('testframe')
+    iframe.addEventListener("load", function(e){
+
+        var win = iframe.contentWindow,
+            polyfill = win.CSSRegions,
+            regions = win.document.querySelectorAll('.myregions'),
+            source = win.document.querySelectorAll('#source').item(3)
+
+        start()
+        var txt = regions.item(0).innerText;
+        txt += regions.item(1).innerText;
+        txt += regions.item(2).innerText;
+        txt = txt.replace(/\s+/g,"")
+        var txt2 = source.innerText;
+        txt2 = txt2.replace(/\s+/g,"");
+
+        equal(txt, txt2, "No text was lost")
+    })
+})
