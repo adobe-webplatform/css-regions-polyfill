@@ -1103,7 +1103,7 @@ window.CSSRegions = function(scope) {
         if ( !curOverflow || curOverflow === "visible" ) {
             el.style.overflow = "hidden";
         }
-        isOverflowing = el.clientHeight < el.scrollHeight;
+        isOverflowing = el.clientHeight < (el.scrollHeight - 1);
         el.style.overflow = curOverflow;
         return isOverflowing;
     };
