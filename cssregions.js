@@ -515,7 +515,7 @@ window.CSSRegions = function(scope) {
                 var tmp = new Date().getTime();
                 flowContentIntoRegions();
                 executionQueue--;
-                console.log("CSS Regions doLayout() executed in: " + (new Date().getTime() - tmp));
+//                console.log("CSS Regions doLayout() executed in: " + (new Date().getTime() - tmp));
             }
         },
                                    
@@ -681,49 +681,46 @@ window.CSSRegions = function(scope) {
                     currentRegion.regionOverset = "empty";
                     continue;
                 }
-                // Don't use regions with display attribute value equal to none
-                if (getComputedStyle(currentRegion).display !== "none") {
-                    el = sourceNodes.shift();
-                    // The last region gets all the remaining content
-                    if ((i + 1) === l) {
-                        nextSibling = currentRegion.nextSibling || null;
-                        tmp = currentRegion.parentNode;
-                        tmp.removeChild(currentRegion);
-                        while (el) {
-                            currentRegion.appendChild(el.cloneNode(true));
-                            addRegionsByContent(el, -1, currentRegion, currentFlow);
+                el = sourceNodes.shift();
+                // The last region gets all the remaining content
+                if ((i + 1) === l) {
+                    nextSibling = currentRegion.nextSibling || null;
+                    tmp = currentRegion.parentNode;
+                    tmp.removeChild(currentRegion);
+                    while (el) {
+                        currentRegion.appendChild(el.cloneNode(true));
+                        addRegionsByContent(el, -1, currentRegion, currentFlow);
+                        el = sourceNodes.shift();
+                    }
+                    if (nextSibling) {
+                        tmp.insertBefore(currentRegion, nextSibling);
+                        nextSibling = null;
+                    } else {
+                        tmp.appendChild(currentRegion);
+                    }
+                    tmp = null;
+                    currentFlow.lastRegionWithContentIndex = i;
+                    // Check if overflows
+                    if (checkForOverflow(currentRegion)) {
+                        currentRegion.webKitRegionOverset = "overset";
+                        currentRegion.regionOverset = "overset";
+                        currentFlow.overset = true;
+                    }
+                } else {
+                    while (el) {
+                        el = addContentToRegion(el, currentRegion, currentFlow);
+                        currentRegion["data-w"] = getComputedStyle(currentRegion).width;
+                        currentRegion["data-h"] = getComputedStyle(currentRegion).height;
+                        if (el) {
+                            // If current region is filled, time to move to the next one
+                            sourceNodes.unshift(el);
+                            break;
+                        } else {
                             el = sourceNodes.shift();
                         }
-                        if (nextSibling) {
-                            tmp.insertBefore(currentRegion, nextSibling);
-                            nextSibling = null;
-                        } else {
-                            tmp.appendChild(currentRegion);
-                        }
-                        tmp = null;
-                        currentFlow.lastRegionWithContentIndex = i;
-                        // Check if overflows
-                        if (checkForOverflow(currentRegion)) {
-                            currentRegion.webKitRegionOverset = "overset";
-                            currentRegion.regionOverset = "overset";
-                            currentFlow.overset = true;
-                        }
-                    } else {
-                        while (el) {
-                            el = addContentToRegion(el, currentRegion, currentFlow);
-                            currentRegion["data-w"] = getComputedStyle(currentRegion).width;
-                            currentRegion["data-h"] = getComputedStyle(currentRegion).height;
-                            if (el) {
-                                // If current region is filled, time to move to the next one
-                                sourceNodes.unshift(el);
-                                break;
-                            } else {
-                                el = sourceNodes.shift();
-                            }
-                        }
-                        currentRegion.webKitRegionOverset = "fit";
-                        currentRegion.regionOverset = "fit";
                     }
+                    currentRegion.webKitRegionOverset = "fit";
+                    currentRegion.regionOverset = "fit";
                 }
                 regionsValidFlag[currentFlow.name] = true;
             }  
@@ -775,6 +772,8 @@ window.CSSRegions = function(scope) {
                 ret = elemContent;
             // Let's try to do some splitting of the elemContent maybe we can fit a part of it in the current region.
             } else {
+                // Set the nodes index order withing their parents
+                setIndexOrder(nodes);
                 // Let's see if we can fit the content if we remove some of the nodes
                 indexOverflowPoint = findIndexForOverflowPoint(region, el, nodes, removedContent);
                 if (indexOverflowPoint < 0 ) {   // We couldn't find a way to split the content
@@ -799,6 +798,22 @@ window.CSSRegions = function(scope) {
         }
         return ret;
     };
+
+    var setIndexOrder = function(nodes) {
+          var i, l, index, sibling, currentNode;
+          for (i = 0, l = nodes.length; i < l; i++) {
+              currentNode = nodes[i];
+              if (currentNode.nodeName === "#text") {
+                  continue;
+              }
+              index = 0;
+              sibling = currentNode;
+              while( (sibling = sibling.previousSibling) !== null ) {
+                  index++;
+              }
+              currentNode["data-index"] = index;
+          }
+      };
 
     var findIndexForOverflowPoint = function(region, el, nodes, removedContent) {
         var currentNode, j, l, m,
@@ -843,7 +858,7 @@ window.CSSRegions = function(scope) {
                         if (currentNode.nodeName === "#text") {
                             currentNode.data = removedContent[j];
                         } else {
-                            removedContent[j].appendChild(currentNode);
+                            removedContent[j].insertBefore(currentNode, removedContent[j].childNodes.item(currentNode["data-index"]));
                         }
                         delete(removedContent[j]);
                     }
@@ -1041,7 +1056,7 @@ window.CSSRegions = function(scope) {
             if (currentNode.nodeName === "#text") {
                 currentNode.data = removedContent[i];
             } else {
-                removedContent[i].appendChild(currentNode);
+                removedContent[i].insertBefore(currentNode, removedContent[i].childNodes.item(currentNode["data-index"]));
             }
         }
     };
