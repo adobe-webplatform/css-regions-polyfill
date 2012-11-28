@@ -1013,6 +1013,15 @@ window.CSSRegions = function(scope) {
     var assembleUnusedContent = function(indexOverflowPoint, nodes, removedContent, elem) {
         var currentNode, i, l, node,
             arrElements = [];
+        // Put back the leftovers not consumed by the current region
+        for (i = indexOverflowPoint, l = nodes.length; i < l; i++) {
+            currentNode = nodes[i];
+            if (currentNode.nodeName === "#text") {
+                currentNode.data = removedContent[i];
+            } else {
+                removedContent[i].insertBefore(currentNode, removedContent[i].childNodes.item(currentNode["data-index"]));
+            }
+        }
         // Delete the content that was already consumed by the current region
         for (i = 0; i < indexOverflowPoint; i++) {
             currentNode = nodes[i];
@@ -1050,15 +1059,7 @@ window.CSSRegions = function(scope) {
             }
             node = node.parentNode;
         }
-        // Put back the leftovers not consumed by the current region
-        for (i = indexOverflowPoint, l = nodes.length; i < l; i++) {
-            currentNode = nodes[i];
-            if (currentNode.nodeName === "#text") {
-                currentNode.data = removedContent[i];
-            } else {
-                removedContent[i].insertBefore(currentNode, removedContent[i].childNodes.item(currentNode["data-index"]));
-            }
-        }
+
     };
 
     /**
@@ -1278,14 +1279,14 @@ window.CSSRegions = function(scope) {
         } else {
             scope.attachEvent("onload", function(){ polyfill.init(); });
             scope.attachEvent("onresize",
-                            function(){
-                                window.clearTimeout(timeoutId);
-                                timeoutId = window.setTimeout(function() {
-                                        invalidateRegions();
-                                        polyfill.doLayout();
-                                    },
-                                    300);
-                            });
+                function(){
+                    window.clearTimeout(timeoutId);
+                    timeoutId = window.setTimeout(function() {
+                            invalidateRegions();
+                            polyfill.doLayout();
+                        },
+                        300);
+                });
         }
     }
     
