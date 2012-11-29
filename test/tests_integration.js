@@ -111,13 +111,24 @@ asyncTest("Whole Text was fitted", function(){
             source = win.document.querySelectorAll('#source').item(3)
 
         start()
-        var txt = regions.item(0).innerText;
-        txt += regions.item(1).innerText;
-        txt += regions.item(2).innerText;
-        txt = txt.replace(/\s+/g,"")
-        var txt2 = source.innerText;
-        txt2 = txt2.replace(/\s+/g,"");
+        var txtReg1 = regions.item(0).innerText.replace(/\s+/g,"");
+        var txtReg2 = regions.item(1).innerText.replace(/\s+/g,"");
+        var txtReg3 = regions.item(2).innerText.replace(/\s+/g,"");
+        var txt = (txtReg1 + txtReg2 + txtReg3)
+        var txt2 = source.innerText.replace(/\s+/g,"");
+
+        var txtControl1 = "ThisisafunctionaltestfortheCSSRegionsPolyfill.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.Usingthissetupwecantestthatthecontentflowing";
+        var txtControl2 = "algorithmusedbythepolyfillworksasexpected.Itshouldn'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplittingthetextnodes/DOMelements";
+        var txtControl3 = "betweenmultipleregionsorhandlingtextnodesandimageslikethis:Afteranychangeofthealgorithmweshouldrunthistesttomakesurethatthereweren'tintroducedanybugs.";
 
         equal(txt, txt2, "No text was lost")
+        equal(txtReg1, txtControl1, "First region text is OK (not less not more)")
+        equal(txtReg2, txtControl2, "Second region text is OK (not less not more)")
+        equal(txtReg3, txtControl3, "Third region text is OK (not less not more)")
+        // Tests for DOM order
+        var img1 = regions.item(0).childNodes.item(0).childNodes.item(1).childNodes.item(3)
+        equal(img1.outerHTML, '<img src="../content-folding/ads/2.jpg">', "First region has the first image")
+
+
     })
 })
