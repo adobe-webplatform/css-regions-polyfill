@@ -111,11 +111,11 @@ asyncTest("Whole Text was fitted", function(){
             source = win.document.querySelectorAll('#source').item(3)
 
         start()
-        var txtReg1 = regions.item(0).innerText.replace(/\s+/g,"");
-        var txtReg2 = regions.item(1).innerText.replace(/\s+/g,"");
-        var txtReg3 = regions.item(2).innerText.replace(/\s+/g,"");
+        var txtReg1 = regions.item(0).innerText.replace(/\s+/g,"")
+        var txtReg2 = regions.item(1).innerText.replace(/\s+/g,"")
+        var txtReg3 = regions.item(2).innerText.replace(/\s+/g,"")
         var txt = (txtReg1 + txtReg2 + txtReg3)
-        var txt2 = source.innerText.replace(/\s+/g,"");
+        var txt2 = source.innerText.replace(/\s+/g,"")
 
         var txtControl1 = "ThisisafunctionaltestfortheCSSRegionsPolyfill.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.Usingthissetupwecantestthatthecontentflowing";
         var txtControl2 = "algorithmusedbythepolyfillworksasexpected.Itshouldn'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplittingthetextnodes/DOMelements";
@@ -125,9 +125,17 @@ asyncTest("Whole Text was fitted", function(){
         equal(txtReg1, txtControl1, "First region text is OK (not less not more)")
         equal(txtReg2, txtControl2, "Second region text is OK (not less not more)")
         equal(txtReg3, txtControl3, "Third region text is OK (not less not more)")
+
         // Tests for DOM order
-        var img1 = regions.item(0).childNodes.item(0).childNodes.item(1).childNodes.item(3)
-        equal(img1.outerHTML, '<img src="../content-folding/ads/2.jpg">', "First region has the first image")
+        var reg1Dom = regions.item(0).innerHTML.replace(/\s+/g,"")
+        var domControl1 = '<divid="source"><p>Thisisafunctionaltestforthe<spanclass="highlight">CSSRegionsPolyfill</span>.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.<imgsrc="../content-folding/ads/2.jpg"></p><p>Usingthissetupwecantestthat<ahref="http://corlan.org"><spanclass="highlight">thecontentflowing</span></a></p></div>'
+        var reg2Dom = regions.item(1).innerHTML.replace(/\s+/g,"")
+        var domControl2 = '<divid="source"><p><ahref="http://corlan.org"><spanclass="highlight">algorithm</span>usedbythepolyfill</a>worksasexpected.</p><p>Itshouldn\'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.</p><p>Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplitting<spanclass="highlight">thetextnodes/DOMelements</span></p></div>'
+        var reg3Dom = regions.item(2).innerHTML.replace(/\s+/g,"")
+        var domControl3 = '<divid="source"><p>betweenmultipleregionsorhandlingtextnodesandimageslikethis:<imgsrc="../content-folding/ads/1.jpg">Afteranychangeofthealgorithmweshouldrunthistesttomakesurethatthereweren\'tintroducedanybugs.</p></div>'
+        equal(reg1Dom, domControl1, "DOM structure and content for first region is OK")
+        equal(reg2Dom, domControl2, "DOM structure and content for first region is OK")
+        equal(reg3Dom, domControl3, "DOM structure and content for first region is OK")
 
 
     })
