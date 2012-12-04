@@ -102,7 +102,7 @@ Learn more from the [Testem docs](https://github.com/airportyh/testem/blob/maste
 
 The code in this repository implies and respects different licenses. This is a quick overview. For details check each folder's corresponding LICENSE.md file.
 
-- MIT for polyfill
+- Apache 2 for CSS Regions polyfill
 - Public Domain for tests, demos and docs 
 - Third party assets under their own licenses
 
