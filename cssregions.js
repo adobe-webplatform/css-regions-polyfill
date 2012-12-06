@@ -902,13 +902,13 @@ window.CSSRegions = function(scope) {
                 ret = elemContent;
             // Let's try to do some splitting of the elemContent maybe we can fit a part of it in the current region.
             } else {
-                // Set the nodes index order withing their parents
-                setIndexOrder(nodes);
+
+                setIndexOrder(nodes); // Set the nodes index order within their parents
                 // Let's see if we can fit the content if we remove some of the nodes
                 indexOverflowPoint = findIndexForOverflowPoint(region, el, nodes, removedContent);
                 if (indexOverflowPoint < 0 ) {   // We couldn't find a way to split the content
                     ret = elemContent;
-                } else {        // Try splitting the TextNode content to fit in
+                } else {  // Try splitting the TextNode content to fit in
                     currentNode = nodes[indexOverflowPoint];
                     if (currentNode.nodeName === "#text") {
                         txt = removedContent[indexOverflowPoint].replace(/^\s+|\s+$/g,"");

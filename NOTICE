@@ -1,0 +1,25 @@
+Copyright 2012 Adobe Systems Incorporated. All rights reserved.
+
+This software is licensed under the Apache License, Version 2.0 (see
+LICENSE file).
+
+This software uses the following third party libraries that may have
+licenses differing from that of the software itself. You can find the
+libraries and their respective licenses below.
+
+- content-folding - ./playground/content-folding
+
+    This is a modified version of this demo:
+    http://css-tricks.com/content-folding/
+
+    There are no license information available for this.
+
+- Human Legacy Project Demo - ./playground/human-legacy-project
+
+    There are no license information available for this. This demo is
+    a modified version of this original:
+    http://christiancantrell.com/adobe/hlp/callout.html
+
+- modernizr - ./playground/modernizr.custom.regions.js
+
+    Available via the MIT license from http://modernizr.com
