@@ -1,11 +1,16 @@
 module.exports = function(grunt) {
+    
     // Project configuration.
+    var project = {
+          files: ['src/StyleLoader.js', 'src/cssregions.js']
+    }
+    
     grunt.initConfig({
       pkg: '<json:package.json>',
       
       concat: {
           dist: {
-              src: ['src/cssregions.js'],
+              src: project.files,
               dest: '<%= pkg.name %>.js'
           }
       },
@@ -19,7 +24,7 @@ module.exports = function(grunt) {
       
       watch: {
           js: {
-              files: ['src/cssregions.js'],
+              files: project.files,
               tasks: 'concat min'
           }
       }
