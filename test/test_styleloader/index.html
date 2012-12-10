@@ -11,7 +11,14 @@
         }
     </style>
     <link rel="stylesheet" type="text/css" href="reset.css" media="all" />
-    
+</head>
+<body>
+    <h1>StyleLoader Test</h1>
+    <p><code>StyleLoader.js</code> will collect the CSS text content of all <code>link</code> and <code>style</code> stylesheets on the page in the DOM order. When done it will run the given callback with a reference to the list of collected stylesheets.</p>
+    <p>
+        <strong>Test status:</strong>
+        <span id='output'>Page stylesheets are loading</span>
+    </p>
     <script type="text/javascript" src="../../src/StyleLoader.js"></script>
     <script type="text/javascript">
     
@@ -21,13 +28,5 @@
     })
     
     </script>
-</head>
-<body>
-    <h1>StyleLoader Test</h1>
-    <p><code>StyleLoader.js</code> will collect the CSS text content of all <code>link</code> and <code>style</code> stylesheets on the page in the DOM order. When done it will run the given callback with a reference to the list of collected stylesheets.</p>
-    <p>
-        <strong>Test status:</strong>
-        <span id='output'>Page stylesheets are loading</span>
-    </p>
 </body>
 </html>
