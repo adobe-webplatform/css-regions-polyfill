@@ -3,7 +3,7 @@ CSS Regions Polyfill Feature Support
 
 A lot of effort was put into building the current polyfill to support the basic use cases for CSS Regions. Some features require refinement, others are not yet implemented.
 
-The CSS Regions polyfill is meant to illustrate the functionality of CSS Regions in browser that don't yet support them. Keep in mind that the polyfill cannot match the peformance or the full scope of features natively implemented in the browser.
+The CSS Regions polyfill is meant to illustrate the functionality of CSS Regions in browsers that don't yet support them. Keep in mind that the polyfill cannot match the peformance or the full scope of features natively implemented in the browser.
 
 Your feedback, suggestions and contributions are welcome.
 
