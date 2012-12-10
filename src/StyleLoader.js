@@ -43,7 +43,6 @@
             xhr.onreadystatechange = function() {
                 if(xhr.readyState === 4) {
                     if (xhr.status === 200){ 
-                        console.log(xhr)
                         self.cssText = xhr.responseText
                         onSuccess.call(scope, self)
                     }
@@ -51,9 +50,10 @@
                         onError.call(scope, self)
                     }
                 }
-            }
+            }  
             
-            xhr.open('GET', this.url)
+            // forced sync to keep Regions CSSOM working sync
+            xhr.open('GET', this.url, false)
             xhr.send(null)
         }
         else{
@@ -81,11 +81,11 @@
             i;
             
         this.queueCount = len
-            
+        
         for( i = 0; i < len; i++){
             stylesheet = new StyleSheet(els[i])
-            stylesheet.load(this.onStyleSheetLoad, this.onStyleSheetError, this)
             this.stylesheets.push(stylesheet)
+            stylesheet.load(this.onStyleSheetLoad, this.onStyleSheetError, this)
         }
     }
 

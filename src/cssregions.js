@@ -426,34 +426,49 @@ window.CSSRegions = function(scope) {
     }
     
     Polyfill.prototype = {
-        init: function() {   
+        init: function() {
 
-            var rules, flowName, contentNodesSelectors, regionsSelectors, parser,
-                inlineStyles = document.querySelector("style");
-
+            var self = this
+            
+            if (!window.StyleLoader){
+                console.error("Missing StyleLoader.js")
+                return
+            }
+            
+            /* Load all stylesheets then feed them to the parser */
+            new StyleLoader(function(){
+                return function(stylesheets){
+                    self.onStylesLoaded(stylesheets)
+                }
+            }())
+        },
+        
+        setup: function(){
+            // Array of NamedFlow objects.
+            this.namedFlows = [];
+            // instance of Collection
+            this.namedFlowCollection = null;
+        },
+        
+        onStylesLoaded: function(stylesheets){
+            var rules, flowName, contentNodesSelectors, regionsSelectors, 
+                parser = new CSSParser();
+                
             // setup or reset everything
-            this.setup();
-
-            if (!document.styleSheets.length) {
-                console.log("No CSS rules defined!");
-                return;
-            }
-
-            if (inlineStyles === null) {
-                console.log("There is no inline CSS for CSS Regions!");
-                return;
-            }
-
-            // Parse the inline stylesheet for rules
-            parser = new CSSParser();
-            parser.parse(inlineStyles.innerHTML);
+            this.setup(); 
+            
+            stylesheets.forEach(function(sheet){
+                // Parse the stylesheet for rules
+                parser.parse(sheet.cssText);
+            })
+            
             if (parser.cssRules.length === 0) {
                 console.log("There is no inline CSS for CSS Regions!");
                 return;
             }  
-
+            
             // Parse the rules and look for "flow-into" and "flow-from" rules;
-            rules = this.getNamedFlowRules(parser.cssRules);   
+            rules = this.getNamedFlowRules(parser.cssRules); 
                              
             for (flowName in rules) {
                 contentNodesSelectors = rules[flowName].contentNodesSelectors;
@@ -464,16 +479,10 @@ window.CSSRegions = function(scope) {
                                                                             
             this.namedFlowCollection = new Collection(this.namedFlows, 'name');
             // Expose methods to window/document as defined by the CSS Regions spec
-            this.exposeGlobalOM();    
+            this.exposeGlobalOM();
+            
             // If there are CSS regions move the content from named flows into region chains
-            this.doLayout();
-        },
-        
-        setup: function(){    
-            // Array of NamedFlow objects.
-            this.namedFlows = [];
-            // instance of Collection
-            this.namedFlowCollection = null;
+            this.doLayout();  
         },
         
         getNamedFlowRules: function(cssRules) {
@@ -515,12 +524,11 @@ window.CSSRegions = function(scope) {
                 var tmp = new Date().getTime();
                 flowContentIntoRegions();
                 executionQueue--;
-//                console.log("CSS Regions doLayout() executed in: " + (new Date().getTime() - tmp));
             }
         },
                                    
         // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
-        exposeGlobalOM: function() {
+        exposeGlobalOM: function() { 
             document['getNamedFlows'] = document['webkitGetNamedFlows'] = this.getNamedFlows.bind(this);
         },
           
