@@ -109,13 +109,12 @@ asyncTest("Whole Text was fitted", function(){
             polyfill = win.CSSRegions,
             regions = win.document.querySelectorAll('.myregions'),
             source = win.document.querySelectorAll('#source').item(3)
-
         start()
-        var txtReg1 = regions.item(0).innerText.replace(/\s+/g,"")
-        var txtReg2 = regions.item(1).innerText.replace(/\s+/g,"")
-        var txtReg3 = regions.item(2).innerText.replace(/\s+/g,"")
+        var txtReg1 = regions.item(0).textContent.replace(/\s+/g,"")
+        var txtReg2 = regions.item(1).textContent.replace(/\s+/g,"")
+        var txtReg3 = regions.item(2).textContent.replace(/\s+/g,"")
         var txt = (txtReg1 + txtReg2 + txtReg3)
-        var txt2 = source.innerText.replace(/\s+/g,"")
+        var txt2 = source.textContent.replace(/\s+/g,"")
 
         var txtControl1 = "ThisisafunctionaltestfortheCSSRegionsPolyfill.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.Usingthissetupwecantestthatthecontentflowing";
         var txtControl2 = "algorithmusedbythepolyfillworksasexpected.Itshouldn'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplittingthetextnodes/DOMelements";
