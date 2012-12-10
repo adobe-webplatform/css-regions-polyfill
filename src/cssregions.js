@@ -507,8 +507,16 @@ window.CSSRegions = function(scope) {
                 console.warn("No named flow / regions CSS rules");
                 return;
             }
-            console.log("CSS Regions doLayout()");
-            flowContentIntoRegions();
+            executionQueue++;
+            if (executionQueue > 1) {
+                return;
+            }
+            while (executionQueue > 0) {
+                var tmp = new Date().getTime();
+                flowContentIntoRegions();
+                executionQueue--;
+//                console.log("CSS Regions doLayout() executed in: " + (new Date().getTime() - tmp));
+            }
         },
                                    
         // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
@@ -532,6 +540,7 @@ window.CSSRegions = function(scope) {
                 this.namedFlowCollection = new Collection(this.namedFlows, 'name');
             }
             namedFlow.contentNodes.push(el);
+            regionsValidFlag[namedFlow.name] = false;
         },
         addRegionToNamedFlow: function(flowName, el) {
             var namedFlow = this.getNamedFlows().namedItem(flowName);
@@ -541,11 +550,15 @@ window.CSSRegions = function(scope) {
                 this.namedFlowCollection = new Collection(this.namedFlows, 'name');
             }
             namedFlow.regions.push(el);
+            regionsValidFlag[namedFlow.name] = false;
         },
           
         "NamedFlow": NamedFlow,
         "Collection": Collection
     }
+
+    var executionQueue = 0;
+    var regionsValidFlag = {};
 
     /**
      * Returns the nodes ordered by their DOM order
@@ -603,13 +616,22 @@ window.CSSRegions = function(scope) {
      * @param regions
      * @return {Array}
      */
-    var getRegionsForFlow = function(regions) {
+    var getRegionsForFlow = function(regions, namedFlow) {
         var i, l, el,
             destinationNodes = [];
         for (i = 0, l = regions.length; i < l; i++) {
             el = regions[i];
             if (getComputedStyle(el).display !== "none") {
                 destinationNodes.push(el);
+                el["data-display"] = true;
+                if (namedFlow.lastRegionWithContentIndex < i
+                        && ( el["data-w"] !== getComputedStyle(el).width
+                               || el["data-h"] !== getComputedStyle(el).height) ) {
+                    invalidateRegions([namedFlow.name]);
+                }
+            } else if (el["data-display"]) {
+                invalidateRegions([namedFlow.name]);
+                delete(el["data-display"]);
             }
         }
         return destinationNodes;
@@ -621,27 +643,36 @@ window.CSSRegions = function(scope) {
      * @param regions
      */
     var flowContentIntoRegions = function() {
-        var currentRegion, currentFlow, j, m, i, l, sourceNodes, destinationNodes, el,
+        var currentRegion, currentFlow, j, m, i, l, destinationNodes, el, tmp, nextSibling,
+            sourceNodes = [],
             flows = document.getNamedFlows();
         
-        for (j = 0, m = flows.length; j < m; j++){
+        for (j = 0, m = flows.length; j < m; j++) {
             currentFlow = flows[j];
             currentFlow.regionsByContent = {content: [], regions: []};
             currentFlow.firstEmptyRegionIndex = -1;
 
-            // Build the source to be flown from the region names
-            sourceNodes = getNodesForFlow(currentFlow.contentNodes);
             // Remove regions with display:none;
-            destinationNodes = getRegionsForFlow(currentFlow.getRegions());
-                         
+            destinationNodes = getRegionsForFlow(currentFlow.getRegions(), currentFlow);
             currentFlow.overset = false;
 
+            if (regionsValidFlag[currentFlow.name]) { // Can we skip some of the layout?
+                tmp = destinationNodes[currentFlow.lastRegionWithContentIndex].childNodes;
+                for (i = 0, l = tmp.length; i < l; ++i) {
+                    sourceNodes.push(tmp[i]);
+                }
+                i = currentFlow.lastRegionWithContentIndex;
+            } else { // Build the source to be flown from the region names
+                sourceNodes = getNodesForFlow(currentFlow.contentNodes);
+                i = 0;
+            }
+
             // Flow the source into regions
-            for (i = 0, l = destinationNodes.length; i < l; i++) {
+            for (l = destinationNodes.length; i < l; i++) {
                 currentRegion = destinationNodes[i];
                 currentRegion.innerHTML = "";
                 // We still have to clear the possible content for the remaining regions
-                // even when we don;t have anymore content to flow.
+                // even when we don't have anymore content to flow.
                 if (sourceNodes.length === 0) {
                     if (currentFlow.firstEmptyRegionIndex === -1) {
                         currentFlow.firstEmptyRegionIndex = i;
@@ -650,44 +681,53 @@ window.CSSRegions = function(scope) {
                     currentRegion.regionOverset = "empty";
                     continue;
                 }
-                // Don't use regions with display attribute value equal to none
-                if (getComputedStyle(currentRegion).display !== "none") {
-                    el = sourceNodes.shift();
-                    // The last region gets all the remaining content
-                    if ((i + 1) === l) {
-                        while (el) {
-                            currentRegion.appendChild(el.cloneNode(true));
-                            addRegionsByContent(el, -1, currentRegion, currentFlow);
+                el = sourceNodes.shift();
+                // The last region gets all the remaining content
+                if ((i + 1) === l) {
+                    nextSibling = currentRegion.nextSibling || null;
+                    tmp = currentRegion.parentNode;
+                    tmp.removeChild(currentRegion);
+                    while (el) {
+                        currentRegion.appendChild(el.cloneNode(true));
+                        addRegionsByContent(el, -1, currentRegion, currentFlow);
+                        el = sourceNodes.shift();
+                    }
+                    if (nextSibling) {
+                        tmp.insertBefore(currentRegion, nextSibling);
+                        nextSibling = null;
+                    } else {
+                        tmp.appendChild(currentRegion);
+                    }
+                    tmp = null;
+                    currentFlow.lastRegionWithContentIndex = i;
+                    // Check if overflows
+                    if (checkForOverflow(currentRegion)) {
+                        currentRegion.webKitRegionOverset = "overset";
+                        currentRegion.regionOverset = "overset";
+                        currentFlow.overset = true;
+                    }
+                } else {
+                    while (el) {
+                        el = addContentToRegion(el, currentRegion, currentFlow);
+                        currentRegion["data-w"] = getComputedStyle(currentRegion).width;
+                        currentRegion["data-h"] = getComputedStyle(currentRegion).height;
+                        if (el) {
+                            // If current region is filled, time to move to the next one
+                            sourceNodes.unshift(el);
+                            break;
+                        } else {
                             el = sourceNodes.shift();
                         }
-                        // Check if overflows
-                        if (checkForOverflow(currentRegion)) {
-                            currentRegion.webKitRegionOverset = "overset";
-                            currentRegion.regionOverset = "overset";
-                            currentFlow.overset = true;
-                        }
-                    } else {
-                        while (el) {
-                            el = addContentToRegion(el, currentRegion, currentFlow);
-                            if (el) {
-                                // If current region is filled, time to move to the next one
-                                sourceNodes.unshift(el);
-                                break;
-                            } else {
-                                el = sourceNodes.shift();
-                            }
-                        }
-                        currentRegion.webKitRegionOverset = "fit";
-                        currentRegion.regionOverset = "fit";
                     }
+                    currentRegion.webKitRegionOverset = "fit";
+                    currentRegion.regionOverset = "fit";
                 }
+                regionsValidFlag[currentFlow.name] = true;
             }  
-                           
             // Dispatch regionLayoutUpdate event
             if (currentFlow.regions.length > 0) {
                 currentFlow.fire({type: "regionlayoutupdate", target: currentFlow});
                 currentFlow.fire({type: "webkitregionlayoutupdate", target: currentFlow});
-                console.log("Dispatch regionlayoutupdate event");
             }
         }
     };
@@ -700,11 +740,11 @@ window.CSSRegions = function(scope) {
      * @return null or a DOM element
      */
     var addContentToRegion = function(elemContent, region, namedFlow) {
-        var currentNode, i, l, arrString, txt, indexOverflowPoint,
+        var currentNode, l, arrString, txt,
+            indexOverflowPoint = -1,
             ret = null,
             nodes = [],
             removedContent = [],
-//            el = elemContent.cloneNode(true);
             el = elemContent;
 
         region.appendChild(el);
@@ -732,36 +772,19 @@ window.CSSRegions = function(scope) {
                 ret = elemContent;
             // Let's try to do some splitting of the elemContent maybe we can fit a part of it in the current region.
             } else {
-                // Let's see if we can fit the content if we remove some of the textNodes/images
-                for (i = nodes.length - 1; i >= 0; i--) {
-                    currentNode = nodes[i];
-                    if (currentNode.nodeName === "#text") {
-                        removedContent[i] = currentNode.data;
-                        currentNode.data = "";
-                    } else {
-                        removedContent[i] = currentNode.parentNode;
-                        currentNode.parentNode.removeChild(currentNode);
-                    }
-                    region.appendChild(el);
-                    if ( !checkForOverflow(region) ) {  // We found a node that triggers the overflow
-                        indexOverflowPoint = i;
-                        region.removeChild(el);
-                        break;
-                    }
-                    region.removeChild(el);
-                }
-
-                if (i < 0 ) {   // We couldn't find a way to split the content
+                // Set the nodes index order withing their parents
+                setIndexOrder(nodes);
+                // Let's see if we can fit the content if we remove some of the nodes
+                indexOverflowPoint = findIndexForOverflowPoint(region, el, nodes, removedContent);
+                if (indexOverflowPoint < 0 ) {   // We couldn't find a way to split the content
                     ret = elemContent;
                 } else {        // Try splitting the TextNode content to fit in
+                    currentNode = nodes[indexOverflowPoint];
                     if (currentNode.nodeName === "#text") {
                         txt = removedContent[indexOverflowPoint].replace(/^\s+|\s+$/g,"");
                         arrString = txt.split(" ");
                         l = findMaxIndex(region, el, currentNode, arrString);
                         removedContent[indexOverflowPoint] = buildText(arrString, l, arrString.length - 1);
-                        if (l > 0) {
-                            i = i + 1;
-                        }
                     }
                     region.appendChild(removeEmptyHTMLElements(el.cloneNode(true)));
                     // Build the RegionsByContent Map for the current NamedFlow
@@ -774,6 +797,76 @@ window.CSSRegions = function(scope) {
             addRegionsByContent(el, region, namedFlow);
         }
         return ret;
+    };
+
+    var setIndexOrder = function(nodes) {
+          var i, l, index, sibling, currentNode;
+          for (i = 0, l = nodes.length; i < l; i++) {
+              currentNode = nodes[i];
+              if (currentNode.nodeName === "#text") {
+                  continue;
+              }
+              index = 0;
+              sibling = currentNode;
+              while( (sibling = sibling.previousSibling) !== null ) {
+                  index++;
+              }
+              currentNode["data-index"] = index;
+          }
+      };
+
+    var findIndexForOverflowPoint = function(region, el, nodes, removedContent) {
+        var currentNode, j, l, m,
+            i = nodes.length,
+            k = nodes.length,
+            iMin = 0,
+            iMax = nodes.length - 1;
+
+        while (iMax >= iMin) {
+            l = iMin + Math.round((iMax - iMin) / 2);
+            for (i = l; i < k; i++ ) { // Remove content
+                currentNode = nodes[i];
+                if (currentNode.nodeName === "#text") {
+                    if (currentNode.data !== "") {
+                        removedContent[i] = currentNode.data;
+                        currentNode.data = "";
+                    } else {
+                        break;
+                    }
+                } else {
+                    if (currentNode.parentNode) {
+                        removedContent[i] = currentNode.parentNode;
+                        currentNode.parentNode.removeChild(currentNode);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            region.appendChild(el);
+            if ( checkForOverflow(region) ) {
+                iMax =  l - 1;
+                if (iMax < iMin) {
+                    iMin = iMax;
+                }
+            } else {
+                iMin = l + 1;
+                if (iMax >= iMin) {
+                    m = iMin + Math.round((iMax - iMin) / 2) + 1;
+                    // Put back content that was removed
+                    for (j = l; j < m; j++) {
+                        currentNode = nodes[j];
+                        if (currentNode.nodeName === "#text") {
+                            currentNode.data = removedContent[j];
+                        } else {
+                            removedContent[j].insertBefore(currentNode, removedContent[j].childNodes.item(currentNode["data-index"]));
+                        }
+                        delete(removedContent[j]);
+                    }
+                }
+            }
+            region.removeChild(el);
+        }
+        return l;
     };
 
     /**
@@ -920,6 +1013,15 @@ window.CSSRegions = function(scope) {
     var assembleUnusedContent = function(indexOverflowPoint, nodes, removedContent, elem) {
         var currentNode, i, l, node,
             arrElements = [];
+        // Put back the leftovers not consumed by the current region
+        for (i = indexOverflowPoint, l = nodes.length; i < l; i++) {
+            currentNode = nodes[i];
+            if (currentNode.nodeName === "#text") {
+                currentNode.data = removedContent[i];
+            } else {
+                removedContent[i].insertBefore(currentNode, removedContent[i].childNodes.item(currentNode["data-index"]));
+            }
+        }
         // Delete the content that was already consumed by the current region
         for (i = 0; i < indexOverflowPoint; i++) {
             currentNode = nodes[i];
@@ -957,15 +1059,7 @@ window.CSSRegions = function(scope) {
             }
             node = node.parentNode;
         }
-        // Put back the leftovers not consumed by the current region
-        for (i = indexOverflowPoint, l = nodes.length; i < l; i++) {
-            currentNode = nodes[i];
-            if (currentNode.nodeName === "#text") {
-                currentNode.data = removedContent[i];
-            } else {
-                removedContent[i].appendChild(currentNode);
-            }
-        }
+
     };
 
     /**
@@ -1010,16 +1104,24 @@ window.CSSRegions = function(scope) {
         if ( !curOverflow || curOverflow === "visible" ) {
             el.style.overflow = "hidden";
         }
-        isOverflowing = el.clientHeight < el.scrollHeight;
+        isOverflowing = el.clientHeight < (el.scrollHeight - 1);
         el.style.overflow = curOverflow;
         return isOverflowing;
     };
 
-//    var onMutations = function(mutations) {
-//        mutations.forEach(function(mutation) {
-//            console.log("Mutations: " + mutation.type);
-//        });
-//    };
+    var invalidateRegions = function(arr) {
+        var j, m, flows;
+        if (arr && arr.length) {
+            arr.forEach(function(key){
+                regionsValidFlag[key] = false;
+            });
+        } else {
+            flows = document.getNamedFlows();
+            for (j = 0, m = flows.length; j < m; j++) {
+                regionsValidFlag[flows[j].name] = false;
+            }
+        }
+    };
 
     function EventManager() {
 
@@ -1077,19 +1179,19 @@ window.CSSRegions = function(scope) {
     function Collection(arr, key) {
         var i, l;
 
-        if (typeof arr.pop != 'function' ){
+        if (typeof arr.pop != 'function' ) {
             throw "Invalid input. Expected an array, got: " + typeof arr;
         }                   
         
         this.map = {};
         this.length = 0;
         
-        for (i = 0, l = arr.length; i < l; i++){
+        for (i = 0, l = arr.length; i < l; i++) {
             this[i] = arr[i];
             this.length++;
             
             // build a map indexed with specified object key for quick access
-            if (key && arr[i][key]){    
+            if (key && arr[i][key]) {
                 this.map[arr[i][key]] = this[i];
             }
         }
@@ -1128,6 +1230,7 @@ window.CSSRegions = function(scope) {
         this.regionsByContent = {};
         this._listeners = {};
         this.firstEmptyRegionIndex = -1;
+        this.lastRegionWithContentIndex = -1;
 
         if (contentNodesSelectors && contentNodesSelectors.length) {
             this.contentNodes = orderNodes(contentNodesSelectors);
@@ -1152,9 +1255,8 @@ window.CSSRegions = function(scope) {
         return ret;
     };
       
-    var polyfill;
-//    , observer;
-    
+    var polyfill, timeoutId;
+
     if (!Modernizr) {
         throw new Error("Modernizr is not loaded!");
     }
@@ -1164,20 +1266,28 @@ window.CSSRegions = function(scope) {
     } else {
         polyfill = new Polyfill;
         if (typeof scope.addEventListener !== "undefined") {
-            scope.addEventListener("load", function(){ polyfill.init() });
-            scope.addEventListener("resize", function(){ polyfill.doLayout() });
+            scope.addEventListener("load", function(){ polyfill.init(); });
+            scope.addEventListener("resize",
+                function(){
+                    window.clearTimeout(timeoutId);
+                    timeoutId = window.setTimeout(function() {
+                            invalidateRegions();
+                            polyfill.doLayout();
+                        },
+                        300);
+                });
         } else {
-            scope.attachEvent("onload", function(){ polyfill.init() });
-            scope.attachEvent("onresize", function(){ polyfill.doLayout() });
+            scope.attachEvent("onload", function(){ polyfill.init(); });
+            scope.attachEvent("onresize",
+                function(){
+                    window.clearTimeout(timeoutId);
+                    timeoutId = window.setTimeout(function() {
+                            invalidateRegions();
+                            polyfill.doLayout();
+                        },
+                        300);
+                });
         }
-//        if (WebKitMutationObserver) {
-//            observer = new WebKitMutationObserver(onMutations);
-//        } else if (MutationObserver) {
-//            observer = new MutationObserver(onMutations);
-//        }
-//        if (observer) {
-//            observer.observe(document, { childList: true });
-//        }
     }
     
     return polyfill;
