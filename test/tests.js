@@ -160,8 +160,8 @@ asyncTest('NamedFlow throws regionlayoutupdate event', function(){
 
     stop()
     nf.addEventListener('regionlayoutupdate', function(e){
-        equal(e.target.name, 'myFlow')
         start()
+        equal(e.target.name, 'myFlow')
     })  
     
     // force a relayout
