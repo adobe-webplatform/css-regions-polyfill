@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>StyleLoader test</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="style.css" media="all" />
+    <style type="text/css">
+        h1{
+            /* this will be overwritten by reset.css */
+            color: red;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="reset.css" media="all" />
+    
+    <script type="text/javascript" src="../../src/StyleLoader.js"></script>
+    <script type="text/javascript">
+    
+    StyleLoader(function(styles){ 
+        var out = document.getElementById("output")
+        out.innerHTML = styles.length + " stylesheets have been loaded."
+    })
+    
+    </script>
+</head>
+<body>
+    <h1>StyleLoader Test</h1>
+    <p><code>StyleLoader.js</code> will collect the CSS text content of all <code>link</code> and <code>style</code> stylesheets on the page in the DOM order. When done it will run the given callback with a reference to the list of collected stylesheets.</p>
+    <p>
+        <strong>Test status:</strong>
+        <span id='output'>Page stylesheets are loading</span>
+    </p>
+</body>
+</html>
