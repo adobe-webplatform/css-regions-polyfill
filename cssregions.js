@@ -1,3 +1,125 @@
+!(function(scope){
+    
+    function getStyleSheetElements(){
+        var doc = document,
+            stylesheets = []
+
+        if (typeof doc.querySelectorAll == 'function'){
+            // shiny new browsers
+            stylesheets = doc.querySelectorAll('link[rel="stylesheet"], style')
+
+            // make it an array
+            stylesheets = Array.prototype.slice.call(stylesheets, 0)
+        }
+        else{
+            // old and busted browsers
+            var tags = doc.getElementsByTagName("link")
+
+            if (tags.length){
+                for (var i = 0, len = tags.length; i < len; i++){
+                    if (tags[i].getAttribute('rel') === "stylesheet"){
+                        stylesheets.push(tags[i])
+                    }
+                }
+            }
+        }
+
+        return stylesheets
+    } 
+    
+    function StyleSheet(source){
+        this.source = source
+        this.url = source.href || null
+        this.cssText = ''
+    }
+    
+    StyleSheet.prototype.load = function(onSuccess, onError, scope) {
+        var self = this
+        
+        // Loading external stylesheet
+        if (this.url){
+            var xhr = new XMLHttpRequest()
+            
+            xhr.onreadystatechange = function() {
+                if(xhr.readyState === 4) {
+                    if (xhr.status === 200){ 
+                        self.cssText = xhr.responseText
+                        onSuccess.call(scope, self)
+                    }
+                    else{     
+                        onError.call(scope, self)
+                    }
+                }
+            }  
+            
+            // forced sync to keep Regions CSSOM working sync
+            xhr.open('GET', this.url, false)
+            xhr.send(null)
+        }
+        else{
+            this.cssText = this.source.textContent
+            onSuccess.call(scope, self)
+        }
+    };
+    
+    function StyleLoader(callback){
+        if (!(this instanceof StyleLoader)){
+            return new StyleLoader(callback)
+        }
+
+        this.stylesheets = []
+        this.queueCount = 0
+        this.callback = callback || function(){}
+
+        this.init()
+    }
+
+    StyleLoader.prototype.init = function(){
+        var els = getStyleSheetElements(),
+            len = els.length,
+            stylesheet,
+            i;
+            
+        this.queueCount = len
+        
+        for( i = 0; i < len; i++){
+            stylesheet = new StyleSheet(els[i])
+            this.stylesheets.push(stylesheet)
+            stylesheet.load(this.onStyleSheetLoad, this.onStyleSheetError, this)
+        }
+    }
+
+    StyleLoader.prototype.onStyleSheetLoad = function(stylesheet) {
+        this.queueCount--
+        this.onComplete.call(this)
+    }
+    
+    
+    StyleLoader.prototype.onStyleSheetError = function(stylesheet) {
+        var len = this.stylesheets.length,
+            i;
+            
+        for( i = 0; i < len; i++){ 
+            if (stylesheet.source === this.stylesheets[i].source){
+                // remove the faulty stylesheet
+                this.stylesheets.splice(i, 1)
+
+                this.queueCount--
+                this.onComplete.call(this)
+                return
+            }
+        }
+    }
+    
+    StyleLoader.prototype.onComplete = function(){
+        if (this.queueCount === 0){
+            // run the callback after all stylesheet contents have loaded
+            this.callback.call(this, this.stylesheets)
+        }
+    }
+    
+    scope["StyleLoader"] = StyleLoader
+})(window)
 /*!
 Copyright (C) 2012 Adobe Systems, Incorporated. All rights reserved.
 
@@ -426,34 +548,49 @@ window.CSSRegions = function(scope) {
     }
     
     Polyfill.prototype = {
-        init: function() {   
+        init: function() {
 
-            var rules, flowName, contentNodesSelectors, regionsSelectors, parser,
-                inlineStyles = document.querySelector("style");
-
+            var self = this
+            
+            if (!window.StyleLoader){
+                console.error("Missing StyleLoader.js")
+                return
+            }
+            
+            /* Load all stylesheets then feed them to the parser */
+            new StyleLoader(function(){
+                return function(stylesheets){
+                    self.onStylesLoaded(stylesheets)
+                }
+            }())
+        },
+        
+        setup: function(){
+            // Array of NamedFlow objects.
+            this.namedFlows = [];
+            // instance of Collection
+            this.namedFlowCollection = null;
+        },
+        
+        onStylesLoaded: function(stylesheets){
+            var rules, flowName, contentNodesSelectors, regionsSelectors, 
+                parser = new CSSParser()
+                
             // setup or reset everything
-            this.setup();
-
-            if (!document.styleSheets.length) {
-                console.log("No CSS rules defined!");
-                return;
-            }
-
-            if (inlineStyles === null) {
-                console.log("There is no inline CSS for CSS Regions!");
-                return;
-            }
-
-            // Parse the inline stylesheet for rules
-            parser = new CSSParser();
-            parser.parse(inlineStyles.innerHTML);
+            this.setup(); 
+            
+            stylesheets.forEach(function(sheet){
+                // Parse the stylesheet for rules
+                parser.parse(sheet.cssText);
+            })
+            
             if (parser.cssRules.length === 0) {
                 console.log("There is no inline CSS for CSS Regions!");
                 return;
             }  
-
+            
             // Parse the rules and look for "flow-into" and "flow-from" rules;
-            rules = this.getNamedFlowRules(parser.cssRules);   
+            rules = this.getNamedFlowRules(parser.cssRules); 
                              
             for (flowName in rules) {
                 contentNodesSelectors = rules[flowName].contentNodesSelectors;
@@ -464,16 +601,10 @@ window.CSSRegions = function(scope) {
                                                                             
             this.namedFlowCollection = new Collection(this.namedFlows, 'name');
             // Expose methods to window/document as defined by the CSS Regions spec
-            this.exposeGlobalOM();    
+            this.exposeGlobalOM();
+            
             // If there are CSS regions move the content from named flows into region chains
-            this.doLayout();
-        },
-        
-        setup: function(){    
-            // Array of NamedFlow objects.
-            this.namedFlows = [];
-            // instance of Collection
-            this.namedFlowCollection = null;
+            this.doLayout();  
         },
         
         getNamedFlowRules: function(cssRules) {
@@ -515,12 +646,11 @@ window.CSSRegions = function(scope) {
                 var tmp = new Date().getTime();
                 flowContentIntoRegions();
                 executionQueue--;
-//                console.log("CSS Regions doLayout() executed in: " + (new Date().getTime() - tmp));
             }
         },
                                    
         // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
-        exposeGlobalOM: function() {
+        exposeGlobalOM: function() { 
             document['getNamedFlows'] = document['webkitGetNamedFlows'] = this.getNamedFlows.bind(this);
         },
           
