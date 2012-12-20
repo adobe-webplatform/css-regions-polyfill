@@ -1,97 +1,94 @@
 !(function(scope){
     
-    function getStyleSheetElements(){
+    function getStyleSheetElements() {
         var doc = document,
-            stylesheets = []
+            stylesheets = [];
 
-        if (typeof doc.querySelectorAll == 'function'){
+        if (typeof doc.querySelectorAll == 'function') {
             // shiny new browsers
-            stylesheets = doc.querySelectorAll('link[rel="stylesheet"], style')
+            stylesheets = doc.querySelectorAll('link[rel="stylesheet"], style');
 
             // make it an array
-            stylesheets = Array.prototype.slice.call(stylesheets, 0)
-        }
-        else{
+            stylesheets = Array.prototype.slice.call(stylesheets, 0);
+        } else {
             // old and busted browsers
-            var tags = doc.getElementsByTagName("link")
+            var tags = doc.getElementsByTagName("link");
 
-            if (tags.length){
-                for (var i = 0, len = tags.length; i < len; i++){
-                    if (tags[i].getAttribute('rel') === "stylesheet"){
-                        stylesheets.push(tags[i])
+            if (tags.length) {
+                for (var i = 0, len = tags.length; i < len; i++) {
+                    if (tags[i].getAttribute('rel') === "stylesheet") {
+                        stylesheets.push(tags[i]);
                     }
                 }
             }
         }
 
-        return stylesheets
+        return stylesheets;
     } 
     
-    function StyleSheet(source){
-        this.source = source
-        this.url = source.href || null
-        this.cssText = ''
+    function StyleSheet(source) {
+        this.source = source;
+        this.url = source.href || null;
+        this.cssText = '';
     }
     
     StyleSheet.prototype.load = function(onSuccess, onError, scope) {
-        var self = this
+        var self = this;
         
         // Loading external stylesheet
-        if (this.url){
-            var xhr = new XMLHttpRequest()
+        if (this.url) {
+            var xhr = new XMLHttpRequest();
             
             xhr.onreadystatechange = function() {
                 if(xhr.readyState === 4) {
                     if (xhr.status === 200){ 
-                        self.cssText = xhr.responseText
-                        onSuccess.call(scope, self)
-                    }
-                    else{     
-                        onError.call(scope, self)
+                        self.cssText = xhr.responseText;
+                        onSuccess.call(scope, self);
+                    } else {
+                        onError.call(scope, self);
                     }
                 }
             }  
             
             // forced sync to keep Regions CSSOM working sync
-            xhr.open('GET', this.url, false)
-            xhr.send(null)
-        }
-        else{
-            this.cssText = this.source.textContent
-            onSuccess.call(scope, self)
+            xhr.open('GET', this.url, false);
+            xhr.send(null);
+        } else {
+            this.cssText = this.source.textContent;
+            onSuccess.call(scope, self);
         }
     };
     
-    function StyleLoader(callback){
-        if (!(this instanceof StyleLoader)){
-            return new StyleLoader(callback)
+    function StyleLoader(callback) {
+        if (!(this instanceof StyleLoader)) {
+            return new StyleLoader(callback);
         }
 
-        this.stylesheets = []
-        this.queueCount = 0
-        this.callback = callback || function(){}
+        this.stylesheets = [];
+        this.queueCount = 0;
+        this.callback = callback || function(){};
 
-        this.init()
+        this.init();
     }
 
-    StyleLoader.prototype.init = function(){
+    StyleLoader.prototype.init = function() {
         var els = getStyleSheetElements(),
             len = els.length,
             stylesheet,
             i;
             
-        this.queueCount = len
+        this.queueCount = len;
         
-        for( i = 0; i < len; i++){
-            stylesheet = new StyleSheet(els[i])
-            this.stylesheets.push(stylesheet)
-            stylesheet.load(this.onStyleSheetLoad, this.onStyleSheetError, this)
+        for ( i = 0; i < len; i++) {
+            stylesheet = new StyleSheet(els[i]);
+            this.stylesheets.push(stylesheet);
+            stylesheet.load(this.onStyleSheetLoad, this.onStyleSheetError, this);
         }
     }
 
     StyleLoader.prototype.onStyleSheetLoad = function(stylesheet) {
-        this.queueCount--
-        this.onComplete.call(this)
+        this.queueCount--;
+        this.onComplete.call(this);
     }
     
     
@@ -99,27 +96,27 @@
         var len = this.stylesheets.length,
             i;
             
-        for( i = 0; i < len; i++){ 
-            if (stylesheet.source === this.stylesheets[i].source){
+        for ( i = 0; i < len; i++) {
+            if (stylesheet.source === this.stylesheets[i].source) {
                 // remove the faulty stylesheet
-                this.stylesheets.splice(i, 1)
+                this.stylesheets.splice(i, 1);
 
-                this.queueCount--
-                this.onComplete.call(this)
-                return
+                this.queueCount--;
+                this.onComplete.call(this);
+                return;
             }
         }
     }
     
-    StyleLoader.prototype.onComplete = function(){
+    StyleLoader.prototype.onComplete = function() {
         if (this.queueCount === 0){
             // run the callback after all stylesheet contents have loaded
-            this.callback.call(this, this.stylesheets)
+            this.callback.call(this, this.stylesheets);
         }
     }
     
-    scope["StyleLoader"] = StyleLoader
-})(window)
+    scope["StyleLoader"] = StyleLoader;
+})(window);
 /*!
 Copyright (C) 2012 Adobe Systems, Incorporated. All rights reserved.
 
@@ -164,15 +161,15 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
 !function(scope){  
     
     // pre-flight setup
-    !function(){
-        if (typeof String.prototype.trim !== "function"){
+    !function() {
+        if (typeof String.prototype.trim !== "function") {
             
             // shameless augmentation of String with a trim function 
-            String.prototype.trim = function(string){
+            String.prototype.trim = function(string) {
                 return string.replace(/^\s+/,"").replace(/\s+$/,"");
             }
         }
-    }()
+    }();
     
     function CSSRule(){ 
         this.selectorText = null;
@@ -182,14 +179,14 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
     
     CSSRule.prototype = {    
         
-         setSelector: function(string){ 
+         setSelector: function(string) {
             this.selectorText = string;
             
             // detect @-rules in the following format: @rule-name identifier{ }
             var ruleType = string.match(/^@([^\s]+)\s*([^{]+)?/);
 
-            if (ruleType && ruleType[1]){
-                switch (ruleType[1]){
+            if (ruleType && ruleType[1]) {
+                switch (ruleType[1]) {
                     case "template":
                         this.type = "template";
                         this.cssRules = [];
@@ -208,7 +205,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             }
         }, 
 
-        setStyle: function(properties){ 
+        setStyle: function(properties) {
             
             if (!properties){
                 throw new TypeError("CSSRule.setStyles(). Invalid input. Expected 'object', got " + properties);
@@ -219,9 +216,9 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             return this.style;
         }, 
 
-        setParentRule: function(rule){
+        setParentRule: function(rule) {
 
-            if (!rule){
+            if (!rule) {
                 throw new TypeError("CSSRule.setParentRule(). Invalid input. Expected 'object', got " + properties);
             }
 
@@ -550,36 +547,36 @@ window.CSSRegions = function(scope) {
     Polyfill.prototype = {
         init: function() {
 
-            var self = this
+            var self = this;
             
-            if (!window.StyleLoader){
-                console.error("Missing StyleLoader.js")
-                return
+            if (!window.StyleLoader) {
+                console.error("Missing StyleLoader.js");
+                return;
             }
             
             /* Load all stylesheets then feed them to the parser */
-            new StyleLoader(function(){
-                return function(stylesheets){
-                    self.onStylesLoaded(stylesheets)
+            new StyleLoader(function() {
+                return function(stylesheets) {
+                    self.onStylesLoaded(stylesheets);
                 }
-            }())
+            }());
         },
         
-        setup: function(){
+        setup: function() {
             // Array of NamedFlow objects.
             this.namedFlows = [];
             // instance of Collection
             this.namedFlowCollection = null;
         },
         
-        onStylesLoaded: function(stylesheets){
+        onStylesLoaded: function(stylesheets) {
             var rules, flowName, contentNodesSelectors, regionsSelectors, 
-                parser = new CSSParser()
+                parser = new CSSParser();
                 
             // setup or reset everything
             this.setup(); 
             
-            stylesheets.forEach(function(sheet){
+            stylesheets.forEach(function(sheet) {
                 // Parse the stylesheet for rules
                 parser.parse(sheet.cssText);
             })
