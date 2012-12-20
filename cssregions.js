@@ -273,14 +273,14 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
              var properties = {},
                  sets = string.trim().split(";");
 
-             if (!sets || !sets.length){
+             if (!sets || !sets.length) {
                  return properties;
              }                    
 
-             sets.forEach(function(set){ 
+             sets.forEach(function(set) {
 
                  // invalid key/valye pair
-                 if (set.indexOf(":") == -1){ 
+                 if (set.indexOf(":") == -1) {
                      return;
                  }         
 
@@ -327,11 +327,11 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                 end = remainder.indexOf("}"),
                 nextStart = remainder.indexOf("{");
               
-             if (start > 0){
+             if (start > 0) {
                      
                  rule.setSelector(selector);
 
-                 if (parent){  
+                 if (parent) {
                      rule.setParentRule(parent);
                     
                     /*
@@ -354,7 +354,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                  }
 
                   // nested blocks! the next "{" occurs before the next "}"
-                 if (nextStart > -1 && nextStart < end){  
+                 if (nextStart > -1 && nextStart < end) {
                      
                      // find where the block ends
                      end = getBalancingBracketIndex(remainder, 1);
@@ -391,8 +391,8 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
              function getBalancingBracketIndex(string, depth) {
                 var index = 0; 
                 
-                while(depth){      
-                    switch (string.charAt(index)){
+                while (depth) {
+                    switch (string.charAt(index)) {
                         case "{": 
                             depth++;
                             break;
@@ -421,7 +421,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             
             rules.forEach(function(rule) {
                 
-                if (rule.cssRules){
+                if (rule.cssRules) {
                     rule.cssRules = cascadeRules(rule.cssRules);
                 }
                 
