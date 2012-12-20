@@ -2,7 +2,7 @@
     
     function getStyleSheetElements() {
         var doc = document,
-            stylesheets = []
+            stylesheets = [];
 
         if (typeof doc.querySelectorAll == 'function') {
             // shiny new browsers
