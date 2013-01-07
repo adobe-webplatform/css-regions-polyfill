@@ -26,7 +26,7 @@
         return stylesheets;
     } 
     
-    function StyleSheet(source) {
+    function StyleSheet(source){
         this.source = source;
         this.url = source.href || null;
         this.cssText = '';
@@ -41,10 +41,10 @@
             
             xhr.onreadystatechange = function() {
                 if(xhr.readyState === 4) {
-                    if (xhr.status === 200){ 
+                    if (xhr.status === 200) {
                         self.cssText = xhr.responseText;
                         onSuccess.call(scope, self);
-                    } else {
+                    } else{
                         onError.call(scope, self);
                     }
                 }
@@ -109,7 +109,7 @@
     }
     
     StyleLoader.prototype.onComplete = function() {
-        if (this.queueCount === 0){
+        if (this.queueCount === 0) {
             // run the callback after all stylesheet contents have loaded
             this.callback.call(this, this.stylesheets);
         }
@@ -161,15 +161,15 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
 !function(scope){  
     
     // pre-flight setup
-    !function() {
-        if (typeof String.prototype.trim !== "function") {
+    !function(){
+        if (typeof String.prototype.trim !== "function"){
             
             // shameless augmentation of String with a trim function 
-            String.prototype.trim = function(string) {
+            String.prototype.trim = function(string){
                 return string.replace(/^\s+/,"").replace(/\s+$/,"");
             }
         }
-    }();
+    }()
     
     function CSSRule(){ 
         this.selectorText = null;
@@ -179,14 +179,14 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
     
     CSSRule.prototype = {    
         
-         setSelector: function(string) {
+         setSelector: function(string){ 
             this.selectorText = string;
             
             // detect @-rules in the following format: @rule-name identifier{ }
             var ruleType = string.match(/^@([^\s]+)\s*([^{]+)?/);
 
-            if (ruleType && ruleType[1]) {
-                switch (ruleType[1]) {
+            if (ruleType && ruleType[1]){
+                switch (ruleType[1]){
                     case "template":
                         this.type = "template";
                         this.cssRules = [];
@@ -205,7 +205,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             }
         }, 
 
-        setStyle: function(properties) {
+        setStyle: function(properties){ 
             
             if (!properties){
                 throw new TypeError("CSSRule.setStyles(). Invalid input. Expected 'object', got " + properties);
@@ -216,9 +216,9 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             return this.style;
         }, 
 
-        setParentRule: function(rule) {
+        setParentRule: function(rule){
 
-            if (!rule) {
+            if (!rule){
                 throw new TypeError("CSSRule.setParentRule(). Invalid input. Expected 'object', got " + properties);
             }
 
@@ -273,14 +273,14 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
              var properties = {},
                  sets = string.trim().split(";");
 
-             if (!sets || !sets.length) {
+             if (!sets || !sets.length){
                  return properties;
              }                    
 
-             sets.forEach(function(set) {
+             sets.forEach(function(set){ 
 
                  // invalid key/valye pair
-                 if (set.indexOf(":") == -1) {
+                 if (set.indexOf(":") == -1){ 
                      return;
                  }         
 
@@ -327,11 +327,11 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                 end = remainder.indexOf("}"),
                 nextStart = remainder.indexOf("{");
               
-             if (start > 0) {
+             if (start > 0){
                      
                  rule.setSelector(selector);
 
-                 if (parent) {
+                 if (parent){  
                      rule.setParentRule(parent);
                     
                     /*
@@ -354,7 +354,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
                  }
 
                   // nested blocks! the next "{" occurs before the next "}"
-                 if (nextStart > -1 && nextStart < end) {
+                 if (nextStart > -1 && nextStart < end){  
                      
                      // find where the block ends
                      end = getBalancingBracketIndex(remainder, 1);
@@ -391,8 +391,8 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
              function getBalancingBracketIndex(string, depth) {
                 var index = 0; 
                 
-                while (depth) {
-                    switch (string.charAt(index)) {
+                while(depth){      
+                    switch (string.charAt(index)){
                         case "{": 
                             depth++;
                             break;
@@ -421,7 +421,7 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
             
             rules.forEach(function(rule) {
                 
-                if (rule.cssRules) {
+                if (rule.cssRules){
                     rule.cssRules = cascadeRules(rule.cssRules);
                 }
                 
@@ -547,36 +547,36 @@ window.CSSRegions = function(scope) {
     Polyfill.prototype = {
         init: function() {
 
-            var self = this;
+            var self = this
             
-            if (!window.StyleLoader) {
-                console.error("Missing StyleLoader.js");
-                return;
+            if (!window.StyleLoader){
+                console.error("Missing StyleLoader.js")
+                return
             }
             
             /* Load all stylesheets then feed them to the parser */
-            new StyleLoader(function() {
-                return function(stylesheets) {
-                    self.onStylesLoaded(stylesheets);
+            new StyleLoader(function(){
+                return function(stylesheets){
+                    self.onStylesLoaded(stylesheets)
                 }
-            }());
+            }())
         },
         
-        setup: function() {
+        setup: function(){
             // Array of NamedFlow objects.
             this.namedFlows = [];
             // instance of Collection
             this.namedFlowCollection = null;
         },
         
-        onStylesLoaded: function(stylesheets) {
+        onStylesLoaded: function(stylesheets){
             var rules, flowName, contentNodesSelectors, regionsSelectors, 
                 parser = new CSSParser();
                 
             // setup or reset everything
             this.setup(); 
             
-            stylesheets.forEach(function(sheet) {
+            stylesheets.forEach(function(sheet){
                 // Parse the stylesheet for rules
                 parser.parse(sheet.cssText);
             })
@@ -899,13 +899,13 @@ window.CSSRegions = function(scope) {
                 ret = elemContent;
             // Let's try to do some splitting of the elemContent maybe we can fit a part of it in the current region.
             } else {
-
-                setIndexOrder(nodes); // Set the nodes index order within their parents
+                // Set the nodes index order withing their parents
+                setIndexOrder(nodes);
                 // Let's see if we can fit the content if we remove some of the nodes
                 indexOverflowPoint = findIndexForOverflowPoint(region, el, nodes, removedContent);
                 if (indexOverflowPoint < 0 ) {   // We couldn't find a way to split the content
                     ret = elemContent;
-                } else {  // Try splitting the TextNode content to fit in
+                } else {        // Try splitting the TextNode content to fit in
                     currentNode = nodes[indexOverflowPoint];
                     if (currentNode.nodeName === "#text") {
                         txt = removedContent[indexOverflowPoint].replace(/^\s+|\s+$/g,"");
