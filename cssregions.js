@@ -1442,26 +1442,31 @@ window.CSSRegions = function(scope) {
             }
         }
     })()
-    
+
     if (typeof scope.addEventListener === 'undefined'){
        scope.addEventListener = function(eventName, handler){
            scope.attachEvent("on" + eventName, handler)
        }
     }
     
-    var polyfill = new Polyfill;
-    var timeoutId; 
+    var timeoutId,
+        polyfill = new Polyfill,
+        htmlEl = document.documentElement;
         
     scope.addEventListener('load', function() {
         
         // check for regions CSS and CSSOM support
         if (Supports.cssProperty('flow-into') && Supports.omProperty('getNamedFlows')) {
-     
             polyfill.hasNativeSupport = true;
+            
+            // Modernizr-esque classes on <html> tag to signal CSS Regions support
+            htmlEl.className += " regions";
             return
-        }  
+        }
         
+        // no native CSS Regions support, use polyfill
         polyfill.init();
+        htmlEl.className += " no-regions";
         
         scope.addEventListener("resize", function() {
             window.clearTimeout(timeoutId);
