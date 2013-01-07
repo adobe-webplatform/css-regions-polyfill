@@ -1,7 +1,7 @@
 {
   "name": "cssregions",
   "description": "JavaScript library to add support for CSS Regions",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": {
     "name": "Adobe Systems Inc."
   },
