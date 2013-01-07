@@ -1,3 +1,21 @@
+/*! CSS Regions Polyfill - v0.2 - 2013-01-07
+* https://github.com/adobe-webplatform/css-regions-polyfill
+
+
+* Copyright 2013 Adobe Systems Inc.;
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+
+* http://www.apache.org/licenses/LICENSE-2.0
+
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
 !(function(scope){
     
     function getStyleSheetElements() {
@@ -117,47 +135,18 @@
     
     scope["StyleLoader"] = StyleLoader;
 })(window);
-/*!
-Copyright (C) 2012 Adobe Systems, Incorporated. All rights reserved.
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
- 
-
 /*
 Real developers learn from source. Welcome!
 
 Light JavaScript CSS Parser
-Author: Razvan Caliman (rcaliman@adobe.com, twitter: @razvancaliman)    
+Author: Razvan Caliman (rcaliman@adobe.com, twitter: @razvancaliman)
 
-This is a lightweight, naive and blind CSS Parser. It's meant to be used as a 
-building-block for experiments with unsupported CSS rules and properties. 
+This is a lightweight, naive and blind CSS Parser. It's meant to be used as a
+building-block for experiments with unsupported CSS rules and properties.
 
 This experimental parser is not intended to fully comply with any CSS Standard.
 Use it responsibly and have fun! ;)
-
-CSS Regions support
-Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
-
 */
-
 !function(scope){  
     
     // pre-flight setup
@@ -529,6 +518,10 @@ Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
     scope["CSSParser"] = CSSParser;
        
 }(window);
+/*
+CSS Regions support
+Author: Mihai Corlan (mcorlan@adobe.com, @mcorlan)
+*/
 
 /**
  * This is the object responsible for parsing the regions extracted by CSSParser.
@@ -545,7 +538,7 @@ window.CSSRegions = function(scope) {
     }
     
     Polyfill.prototype = {
-        // flag if CSS Regions is natively suppoted in the browser
+        // flag if CSS Regions is natively supported in the browser
         hasNativeSupport: false,
         
         init: function() {
@@ -573,6 +566,12 @@ window.CSSRegions = function(scope) {
         },
         
         onStylesLoaded: function(stylesheets){
+            
+            if (!window.CSSParser){
+                console.error("Missing CSSParser.js")
+                return
+            }
+            
             var rules, flowName, contentNodesSelectors, regionsSelectors, 
                 parser = new CSSParser();
                 
