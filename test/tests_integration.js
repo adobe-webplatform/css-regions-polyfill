@@ -34,15 +34,21 @@ asyncTest("Breaking news demo", function(){
         var win = iframe.contentWindow,
             polyfill = win.CSSRegions,
             region = win.document.querySelector('ul.breaking-news')
-                
-        start() 
-        ok(polyfill, 'polyfill exists')
-        equal(region.childNodes.length, 2, 'Region has two nodes')
+
+            start()
+            //  ignore polyfill tests if there's native support
+            if (polyfill.hasNativeSupport){
+                expect(0)
+            }
+            else{
+                ok(polyfill, 'polyfill exists')
+                equal(region.childNodes.length, 2, 'Region has two nodes')
+            }
     }) 
 })
 
 asyncTest("Content folding demo", function(){ 
-    setup("../playground/content-folding/index.html", '300px')      
+    setup("../playground/content-folding/index.html", '300px')
     
     var iframe = document.getElementById('testframe')
     iframe.addEventListener("load", function(e){ 
@@ -51,10 +57,16 @@ asyncTest("Content folding demo", function(){
             polyfill = win.CSSRegions,
             region1 = win.document.querySelector('.ad-region-1'),
             region2 = win.document.querySelector('.ad-region-2')
-                
-        start() 
-        equal(region1.childNodes[0].id, 'ad-source', 'Region 1 has content from #ad-source')
-        equal(region2.childNodes[0].id, 'ad-source', 'Region 2 has content from #ad-source')
+            
+        start()
+        //  ignore polyfill tests if there's native support
+        if (polyfill.hasNativeSupport){
+            expect(0)
+        }
+        else{
+            equal(region1.childNodes[0].id, 'ad-source', 'Region 1 has content from #ad-source')
+            equal(region2.childNodes[0].id, 'ad-source', 'Region 2 has content from #ad-source')
+        }
     }) 
 })
 
@@ -68,10 +80,16 @@ asyncTest("Text nodes demo", function(){
             polyfill = win.CSSRegions,
             regions = win.document.querySelectorAll('.myregions')
                             
-        start() 
-        equal(regions.length, 3, "There are 3 regions")
-        equal(regions.item(0).childNodes[0].id, 'source', 'The first region has content from #source')
-        equal(regions.item(2).childNodes[0].id, 'source', 'The last region has content from #source')
+        start()
+        //  ignore polyfill tests if there's native support
+        if (polyfill.hasNativeSupport){
+            expect(0)
+        }
+        else{
+            equal(regions.length, 3, "There are 3 regions")
+            equal(regions.item(0).childNodes[0].id, 'source', 'The first region has content from #source')
+            equal(regions.item(2).childNodes[0].id, 'source', 'The last region has content from #source')
+        }
     }) 
 })
 
@@ -85,10 +103,16 @@ asyncTest("Non-linear Content Flow demo", function(){
             polyfill = win.CSSRegions,
             regions = win.document.querySelectorAll('.myregions')
                             
-        start() 
-        equal(regions.length, 5, "There are 5 regions")
-        equal(regions.item(0).childNodes[0].id, 'source', 'The first region has content from #source')
-        equal(regions.item(4).childNodes[0].id, 'source', 'The last region has content from #source')
+        start()
+        //  ignore polyfill tests if there's native support
+        if (polyfill.hasNativeSupport){
+            expect(0)
+        }
+        else{
+            equal(regions.length, 5, "There are 5 regions")
+            equal(regions.item(0).childNodes[0].id, 'source', 'The first region has content from #source')
+            equal(regions.item(4).childNodes[0].id, 'source', 'The last region has content from #source')
+        }
     }) 
 })
 
@@ -109,33 +133,38 @@ asyncTest("Whole Text was fitted", function(){
             polyfill = win.CSSRegions,
             regions = win.document.querySelectorAll('.myregions'),
             source = win.document.querySelectorAll('#source').item(3)
+
         start()
-        var txtReg1 = regions.item(0).textContent.replace(/\s+/g,"")
-        var txtReg2 = regions.item(1).textContent.replace(/\s+/g,"")
-        var txtReg3 = regions.item(2).textContent.replace(/\s+/g,"")
-        var txt = (txtReg1 + txtReg2 + txtReg3)
-        var txt2 = source.textContent.replace(/\s+/g,"")
+        //  ignore polyfill tests if there's native support
+        if (polyfill.hasNativeSupport){
+            expect(0)
+        }
+        else{
+            var txtReg1 = regions.item(0).textContent.replace(/\s+/g,"")
+            var txtReg2 = regions.item(1).textContent.replace(/\s+/g,"")
+            var txtReg3 = regions.item(2).textContent.replace(/\s+/g,"")
+            var txt = (txtReg1 + txtReg2 + txtReg3)
+            var txt2 = source.textContent.replace(/\s+/g,"")
 
-        var txtControl1 = "ThisisafunctionaltestfortheCSSRegionsPolyfill.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.Usingthissetupwecantestthatthecontentflowing";
-        var txtControl2 = "algorithmusedbythepolyfillworksasexpected.Itshouldn'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplittingthetextnodes/DOMelements";
-        var txtControl3 = "betweenmultipleregionsorhandlingtextnodesandimageslikethis:Afteranychangeofthealgorithmweshouldrunthistesttomakesurethatthereweren'tintroducedanybugs.";
+            var txtControl1 = "ThisisafunctionaltestfortheCSSRegionsPolyfill.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.Usingthissetupwecantestthatthecontentflowing";
+            var txtControl2 = "algorithmusedbythepolyfillworksasexpected.Itshouldn'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplittingthetextnodes/DOMelements";
+            var txtControl3 = "betweenmultipleregionsorhandlingtextnodesandimageslikethis:Afteranychangeofthealgorithmweshouldrunthistesttomakesurethatthereweren'tintroducedanybugs.";
 
-        equal(txt, txt2, "No text was lost")
-        equal(txtReg1, txtControl1, "First region text is OK (not less not more)")
-        equal(txtReg2, txtControl2, "Second region text is OK (not less not more)")
-        equal(txtReg3, txtControl3, "Third region text is OK (not less not more)")
+            equal(txt, txt2, "No text was lost")
+            equal(txtReg1, txtControl1, "First region text is OK (not less not more)")
+            equal(txtReg2, txtControl2, "Second region text is OK (not less not more)")
+            equal(txtReg3, txtControl3, "Third region text is OK (not less not more)")
 
-        // Tests for DOM order
-        var reg1Dom = regions.item(0).innerHTML.replace(/\s+/g,"")
-        var domControl1 = '<divid="source"><p>Thisisafunctionaltestforthe<spanclass="highlight">CSSRegionsPolyfill</span>.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.<imgsrc="../content-folding/ads/2.jpg"></p><p>Usingthissetupwecantestthat<ahref="http://corlan.org"><spanclass="highlight">thecontentflowing</span></a></p></div>'
-        var reg2Dom = regions.item(1).innerHTML.replace(/\s+/g,"")
-        var domControl2 = '<divid="source"><p><ahref="http://corlan.org"><spanclass="highlight">algorithm</span>usedbythepolyfill</a>worksasexpected.</p><p>Itshouldn\'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.</p><p>Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplitting<spanclass="highlight">thetextnodes/DOMelements</span></p></div>'
-        var reg3Dom = regions.item(2).innerHTML.replace(/\s+/g,"")
-        var domControl3 = '<divid="source"><p>betweenmultipleregionsorhandlingtextnodesandimageslikethis:<imgsrc="../content-folding/ads/1.jpg">Afteranychangeofthealgorithmweshouldrunthistesttomakesurethatthereweren\'tintroducedanybugs.</p></div>'
-        equal(reg1Dom, domControl1, "DOM structure and content for first region is OK")
-        equal(reg2Dom, domControl2, "DOM structure and content for first region is OK")
-        equal(reg3Dom, domControl3, "DOM structure and content for first region is OK")
-
-
+            // Tests for DOM order
+            var reg1Dom = regions.item(0).innerHTML.replace(/\s+/g,"")
+            var domControl1 = '<divid="source"><p>Thisisafunctionaltestforthe<spanclass="highlight">CSSRegionsPolyfill</span>.Thefirsttworegionsarefixedwidthandheight.Thethirdonehasfixedwidthandauto-height.<imgsrc="../content-folding/ads/2.jpg"></p><p>Usingthissetupwecantestthat<ahref="http://corlan.org"><spanclass="highlight">thecontentflowing</span></a></p></div>'
+            var reg2Dom = regions.item(1).innerHTML.replace(/\s+/g,"")
+            var domControl2 = '<divid="source"><p><ahref="http://corlan.org"><spanclass="highlight">algorithm</span>usedbythepolyfill</a>worksasexpected.</p><p>Itshouldn\'tlooseanytextandthenodesshouldbesplitcorrectlybetweentheregions.</p><p>Thecontentusedforthisexamplewhilenotverylongitisdecentlycomplextotestvariouspartsofthealgorithmlikesplitting<spanclass="highlight">thetextnodes/DOMelements</span></p></div>'
+            var reg3Dom = regions.item(2).innerHTML.replace(/\s+/g,"")
+            var domControl3 = '<divid="source"><p>betweenmultipleregionsorhandlingtextnodesandimageslikethis:<imgsrc="../content-folding/ads/1.jpg">Afteranychangeofthealgorithmweshouldrunthistesttomakesurethatthereweren\'tintroducedanybugs.</p></div>'
+            equal(reg1Dom, domControl1, "DOM structure and content for first region is OK")
+            equal(reg2Dom, domControl2, "DOM structure and content for first region is OK")
+            equal(reg3Dom, domControl3, "DOM structure and content for first region is OK")
+        }
     })
 })

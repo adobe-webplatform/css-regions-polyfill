@@ -545,6 +545,9 @@ window.CSSRegions = function(scope) {
     }
     
     Polyfill.prototype = {
+        // flag if CSS Regions is natively suppoted in the browser
+        hasNativeSupport: false,
+        
         init: function() {
 
             var self = this
@@ -1381,42 +1384,95 @@ window.CSSRegions = function(scope) {
         }
         return ret;
     };
-      
-    var polyfill, timeoutId;
+    
+    var Supports = (function(){
+        // all spaces are important!
+        var prefixes = ' -webkit- -moz- -o- -ms- ';
 
-    if (!Modernizr) {
-        throw new Error("Modernizr is not loaded!");
-    }
+        function getPrefixedProperties(property, prefixes) {
+            var properties = prefixes.join(property + " ").split(' ');
 
-    if (Modernizr.regions) {
-        return;
-    } else {
-        polyfill = new Polyfill;
-        if (typeof scope.addEventListener !== "undefined") {
-            scope.addEventListener("load", function(){ polyfill.init(); });
-            scope.addEventListener("resize",
-                function(){
-                    window.clearTimeout(timeoutId);
-                    timeoutId = window.setTimeout(function() {
-                            invalidateRegions();
-                            polyfill.doLayout();
-                        },
-                        300);
-                });
-        } else {
-            scope.attachEvent("onload", function(){ polyfill.init(); });
-            scope.attachEvent("onresize",
-                function(){
-                    window.clearTimeout(timeoutId);
-                    timeoutId = window.setTimeout(function() {
-                            invalidateRegions();
-                            polyfill.doLayout();
-                        },
-                        300);
-                });
+            // ignore the last string which is empty.
+            return properties.slice(0, properties.length-1);
         }
+
+        return{
+            cssProperty: function(property, host) {
+                var host = host || document.body;
+                var cssPrefixes = prefixes.split(' ');
+
+                // build an array of prefixed properties.
+                var properties = getPrefixedProperties(property, cssPrefixes);
+
+                for (var i = 0, len = properties.length; i < len; i++){
+                    if (host.style[properties[i]] !== undefined){
+                        return true
+                    }
+                }
+
+                return false
+            },
+
+            omProperty: function(property, host) {
+                var host = host || document;
+                var omPrefixes = prefixes.replace(/-/g, '').split(' ');
+
+                // drop the first element, which is empty
+                omPrefixes = omPrefixes.slice(1, omPrefixes.length);
+
+                // uppercase the property to attach prefixes
+                var ucProperty = property.charAt(0).toUpperCase() + property.slice(1)
+
+                // build an array of prefixed properties.
+                var properties = getPrefixedProperties(ucProperty, omPrefixes);
+
+                // ignore the last string which is empty.
+                properties = properties.slice(0, properties.length-1);
+
+                // add the unprefixed property
+                properties.unshift(property)
+
+                for (var i = 0, len = properties.length; i < len; i++){
+                    if (properties[i] in host){
+                        return true
+                    }
+                }
+
+                return false
+            }
+        }
+    })()
+    
+    if (typeof scope.addEventListener === 'undefined'){
+       scope.addEventListener = function(eventName, handler){
+           scope.attachEvent("on" + eventName, handler)
+       }
     }
     
-    return polyfill;
-
+    var polyfill = new Polyfill;
+    var timeoutId; 
+        
+    scope.addEventListener('load', function() {
+        
+        // check for regions CSS and CSSOM support
+        if (Supports.cssProperty('flow-into') && Supports.omProperty('getNamedFlows')) {
+     
+            polyfill.hasNativeSupport = true;
+            return
+        }  
+        
+        polyfill.init();
+        
+        scope.addEventListener("resize", function() {
+            window.clearTimeout(timeoutId);
+                timeoutId = window.setTimeout(function() {
+                    invalidateRegions();
+                    polyfill.doLayout();
+                },
+                300);
+        });
+    })
+    
+    return polyfill
+    
 }(window);
