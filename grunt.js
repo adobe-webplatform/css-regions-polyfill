@@ -9,10 +9,7 @@ module.exports = function(grunt) {
       pkg: '<json:package.json>',
       
       meta: {
-          banner: '/*! <%= pkg.title %> - v<%= pkg.version %> - ' +
-                  '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-                  '<%= pkg.homepage ? "* " + pkg.homepage + "\n" : "" %>\n\n' +
-                  '* Copyright <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;\n' +
+          banner: '/*! Copyright 2012 <%= pkg.author.name %>;\n' +
                   '* Licensed under the Apache License, Version 2.0 (the "License");\n' +
                   '* you may not use this file except in compliance with the License.\n' +
                   '* You may obtain a copy of the License at\n\n' +
@@ -27,13 +24,14 @@ module.exports = function(grunt) {
       
       concat: {
           dist: {
-              src: ['<banner:meta.banner>', project.files],
+              src: project.files,
               dest: '<%= pkg.name %>.js'
           }
       },
       
       min: {
           dist: {
+              // apply banner to minified file because Uglify removes all comments.
               src: ['<banner:meta.banner>','<%= concat.dist.dest %>'],
               dest: '<%= pkg.name %>.min.js'
           }
