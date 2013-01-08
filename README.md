@@ -106,4 +106,4 @@ The code in this repository implies and respects different licenses. This is a q
 - Public Domain for tests, demos and docs 
 - Third party assets under their own licenses
 
-See LICENSE_INFORMATION.md for details.
+See LICENSE.md for details.
