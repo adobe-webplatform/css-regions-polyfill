@@ -889,7 +889,7 @@ window.CSSRegions = function(scope) {
             // ignore the last string which is empty.
             return properties.slice(0, properties.length-1);
         }
-
+        
         return{
             cssProperty: function(property, host) {
                 var host = host || document.body;
@@ -900,6 +900,9 @@ window.CSSRegions = function(scope) {
 
                 for (var i = 0, len = properties.length; i < len; i++){
                     if (host.style[properties[i]] !== undefined){
+                        // the scope for 'this' is injected
+                        this.supportedProperty = properties[i]
+
                         return true
                     }
                 }
@@ -909,10 +912,11 @@ window.CSSRegions = function(scope) {
 
             omProperty: function(property, host) {
                 var host = host || document;
+                
                 var omPrefixes = prefixes.replace(/-/g, '').split(' ');
 
                 // drop the first element, which is empty
-                omPrefixes = omPrefixes.slice(1, omPrefixes.length);
+                omPrefixes.slice(1, omPrefixes.length);
 
                 // uppercase the property to attach prefixes
                 var ucProperty = property.charAt(0).toUpperCase() + property.slice(1)
@@ -928,14 +932,74 @@ window.CSSRegions = function(scope) {
 
                 for (var i = 0, len = properties.length; i < len; i++){
                     if (properties[i] in host){
+                        this.supportedProperty = properties[i]
+
                         return true
                     }
                 }
 
                 return false
+            },
+            
+            /* 
+                Get the supported property name, prefixed or regular. 
+                Checks and returns CSS properties. If isDOMProperty is set to true it checks and DOM properties
+
+                @param {String} property The unprefixed property
+                @param {String} host The optional host element to check against
+                @param {Boolean} isDOMProperty Look in the dom
+                @return {String}
+            */
+            getSupportedProperty: function(property, host, isDOMProperty) {
+                // make it a boolean
+                var isDOMProperty = !!isDOMProperty
+
+                // scope to inject in checker function to pluck out the supported property
+                var obj = function(){}
+                var inst = new obj
+                
+                // assume non-prefixed property, let checker function change it
+                inst.supportedProperty = property
+                
+                if (isDOMProperty){
+                    Supports.omProperty.call(inst, property, host)
+                }
+                else{
+                    Supports.cssProperty.call(inst, property, host)
+                }
+                
+                return inst.supportedProperty
             }
         }
     })()
+    
+    // using the sledgehammer to test CSS Regions support 
+    // until the false positives get fixed in Chrome
+    function flowHasOverset() {
+        var test = document.createElement("span"),
+            hasOverset = false,
+            flow,
+            flowIntoCSSProperty = Supports.getSupportedProperty('flow-into'),
+            getNamedFlows = Supports.getSupportedProperty('getNamedFlows', document, true)
+            
+        test.id = 'test-regions-support';
+        test.style[flowIntoCSSProperty] = 'testflow';
+        document.body.appendChild(test);
+        
+        // Make sure we don't bork if regions methods are missing
+        try {
+            flow = document[getNamedFlows].call(document)['testflow']
+            // older implementations used to have overflow not overset
+            hasOverset = (typeof flow.overset !== 'undefined')
+        } catch(e) {
+        } finally {
+            // cleanup
+            test.style[flowIntoCSSProperty] = 'none'
+            test.parentNode.removeChild(test)
+            flow = null
+            return !!hasOverset
+        }
+    }
 
     if (typeof scope.addEventListener === 'undefined'){
        scope.addEventListener = function(eventName, handler){
@@ -950,7 +1014,7 @@ window.CSSRegions = function(scope) {
     scope.addEventListener('load', function() {
         
         // check for regions CSS and CSSOM support
-        if (Supports.cssProperty('flow-into') && Supports.omProperty('getNamedFlows')) {
+        if (Supports.cssProperty('flow-into') && Supports.omProperty('getNamedFlows') && flowHasOverset()) {
             polyfill.hasNativeSupport = true;
             
             // Modernizr-esque classes on <html> tag to signal CSS Regions support
@@ -964,11 +1028,11 @@ window.CSSRegions = function(scope) {
         
         scope.addEventListener("resize", function() {
             window.clearTimeout(timeoutId);
-                timeoutId = window.setTimeout(function() {
-                    invalidateRegions();
-                    polyfill.doLayout();
-                },
-                300);
+            timeoutId = window.setTimeout(function() {
+                invalidateRegions();
+                polyfill.doLayout();
+            },
+            300);
         });
     })
     
