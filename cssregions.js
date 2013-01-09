@@ -1448,7 +1448,7 @@ window.CSSRegions = function(scope) {
                 var omPrefixes = prefixes.replace(/-/g, '').split(' ');
 
                 // drop the first element, which is empty
-                omPrefixes.slice(1, omPrefixes.length);
+                omPrefixes = omPrefixes.slice(1, omPrefixes.length);
 
                 // uppercase the property to attach prefixes
                 var ucProperty = property.charAt(0).toUpperCase() + property.slice(1)
