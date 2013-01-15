@@ -137,7 +137,6 @@ window.CSSRegions = function(scope) {
                 return;
             }
             while (executionQueue > 0) {
-                var tmp = new Date().getTime();
                 flowContentIntoRegions();
                 executionQueue--;
             }
@@ -179,7 +178,7 @@ window.CSSRegions = function(scope) {
           
         "NamedFlow": NamedFlow,
         "Collection": Collection
-    }
+    };
 
     var executionQueue = 0;
     var regionsValidFlag = {};
@@ -890,7 +889,7 @@ window.CSSRegions = function(scope) {
             return properties.slice(0, properties.length-1);
         }
         
-        return{
+        return {
             cssProperty: function(property, host) {
                 var host = host || document.body;
                 var cssPrefixes = prefixes.split(' ');
@@ -898,16 +897,15 @@ window.CSSRegions = function(scope) {
                 // build an array of prefixed properties.
                 var properties = getPrefixedProperties(property, cssPrefixes);
 
-                for (var i = 0, len = properties.length; i < len; i++){
-                    if (host.style[properties[i]] !== undefined){
+                for (var i = 0, len = properties.length; i < len; i++) {
+                    if (host.style[properties[i]] !== undefined) {
                         // the scope for 'this' is injected
-                        this.supportedProperty = properties[i]
-
-                        return true
+                        this.supportedProperty = properties[i];
+                        return true;
                     }
                 }
 
-                return false
+                return false;
             },
 
             omProperty: function(property, host) {
@@ -919,7 +917,7 @@ window.CSSRegions = function(scope) {
                 omPrefixes = omPrefixes.slice(1, omPrefixes.length);
 
                 // uppercase the property to attach prefixes
-                var ucProperty = property.charAt(0).toUpperCase() + property.slice(1)
+                var ucProperty = property.charAt(0).toUpperCase() + property.slice(1);
 
                 // build an array of prefixed properties.
                 var properties = getPrefixedProperties(ucProperty, omPrefixes);
@@ -928,17 +926,16 @@ window.CSSRegions = function(scope) {
                 properties = properties.slice(0, properties.length-1);
 
                 // add the unprefixed property
-                properties.unshift(property)
+                properties.unshift(property);
 
-                for (var i = 0, len = properties.length; i < len; i++){
-                    if (properties[i] in host){
-                        this.supportedProperty = properties[i]
-
-                        return true
+                for (var i = 0, len = properties.length; i < len; i++) {
+                    if (properties[i] in host) {
+                        this.supportedProperty = properties[i];
+                        return true;
                     }
                 }
 
-                return false
+                return false;
             },
             
             /* 
@@ -952,35 +949,34 @@ window.CSSRegions = function(scope) {
             */
             getSupportedProperty: function(property, host, isDOMProperty) {
                 // make it a boolean
-                var isDOMProperty = !!isDOMProperty
+                var isDOMProperty = !!isDOMProperty;
 
                 // scope to inject in checker function to pluck out the supported property
-                var obj = function(){}
-                var inst = new obj
+                var obj = function(){};
+                var inst = new obj;
                 
                 // assume non-prefixed property, let checker function change it
-                inst.supportedProperty = property
+                inst.supportedProperty = property;
                 
-                if (isDOMProperty){
-                    Supports.omProperty.call(inst, property, host)
-                }
-                else{
-                    Supports.cssProperty.call(inst, property, host)
+                if (isDOMProperty) {
+                    Supports.omProperty.call(inst, property, host);
+                } else {
+                    Supports.cssProperty.call(inst, property, host);
                 }
                 
-                return inst.supportedProperty
+                return inst.supportedProperty;
             }
         }
-    })()
+    })();
     
     // using the sledgehammer to test CSS Regions support 
     // until the false positives get fixed in Chrome
     function flowHasOverset() {
-        var test = document.createElement("span"),
+        var flow,
+            test = document.createElement("span"),
             hasOverset = false,
-            flow,
             flowIntoCSSProperty = Supports.getSupportedProperty('flow-into'),
-            getNamedFlows = Supports.getSupportedProperty('getNamedFlows', document, true)
+            getNamedFlows = Supports.getSupportedProperty('getNamedFlows', document, true);
             
         test.id = 'test-regions-support';
         test.style[flowIntoCSSProperty] = 'testflow';
@@ -988,23 +984,23 @@ window.CSSRegions = function(scope) {
         
         // Make sure we don't bork if regions methods are missing
         try {
-            flow = document[getNamedFlows].call(document)['testflow']
+            flow = document[getNamedFlows].call(document)['testflow'];
             // older implementations used to have overflow not overset
-            hasOverset = (typeof flow.overset !== 'undefined')
+            hasOverset = (typeof flow.overset !== 'undefined');
         } catch(e) {
         } finally {
             // cleanup
-            test.style[flowIntoCSSProperty] = 'none'
-            test.parentNode.removeChild(test)
-            flow = null
-            return !!hasOverset
+            test.style[flowIntoCSSProperty] = 'none';
+            test.parentNode.removeChild(test);
+            flow = null;
+            return !!hasOverset;
         }
     }
 
-    if (typeof scope.addEventListener === 'undefined'){
-       scope.addEventListener = function(eventName, handler){
-           scope.attachEvent("on" + eventName, handler)
-       }
+    if (typeof scope.addEventListener === 'undefined') {
+       scope.addEventListener = function(eventName, handler) {
+           scope.attachEvent("on" + eventName, handler);
+       };
     }
     
     var timeoutId,
@@ -1019,7 +1015,7 @@ window.CSSRegions = function(scope) {
             
             // Modernizr-esque classes on <html> tag to signal CSS Regions support
             htmlEl.className += " regions";
-            return
+            return;
         }
         
         // no native CSS Regions support, use polyfill
@@ -1036,6 +1032,6 @@ window.CSSRegions = function(scope) {
         });
     })
     
-    return polyfill
+    return polyfill;
     
 }(window);

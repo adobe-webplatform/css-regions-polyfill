@@ -25,20 +25,20 @@ building-block for experiments with unsupported CSS rules and properties.
 This experimental parser is not intended to fully comply with any CSS Standard.
 Use it responsibly and have fun! ;)
 */
-!function(scope){  
+!function(scope) {
     
     // pre-flight setup
-    !function(){
-        if (typeof String.prototype.trim !== "function"){
+    !function() {
+        if (typeof String.prototype.trim !== "function") {
             
             // shameless augmentation of String with a trim function 
-            String.prototype.trim = function(string){
+            String.prototype.trim = function(string) {
                 return string.replace(/^\s+/,"").replace(/\s+$/,"");
             }
         }
     }()
     
-    function CSSRule(){ 
+    function CSSRule() {
         this.selectorText = null;
         this.style = {};
         this.type = "rule";
@@ -46,13 +46,13 @@ Use it responsibly and have fun! ;)
     
     CSSRule.prototype = {    
         
-         setSelector: function(string){ 
+         setSelector: function(string) {
             this.selectorText = string;
             
             // detect @-rules in the following format: @rule-name identifier{ }
             var ruleType = string.match(/^@([^\s]+)\s*([^{]+)?/);
 
-            if (ruleType && ruleType[1]){
+            if (ruleType && ruleType[1]) {
                 switch (ruleType[1]){
                     case "template":
                         this.type = "template";
@@ -72,7 +72,7 @@ Use it responsibly and have fun! ;)
             }
         }, 
 
-        setStyle: function(properties){ 
+        setStyle: function(properties) {
             
             if (!properties){
                 throw new TypeError("CSSRule.setStyles(). Invalid input. Expected 'object', got " + properties);
@@ -83,7 +83,7 @@ Use it responsibly and have fun! ;)
             return this.style;
         }, 
 
-        setParentRule: function(rule){
+        setParentRule: function(rule) {
 
             if (!rule){
                 throw new TypeError("CSSRule.setParentRule(). Invalid input. Expected 'object', got " + properties);
@@ -103,7 +103,7 @@ Use it responsibly and have fun! ;)
             .clear() - method to remove any previously parsed data
             .cssRules - array with CSSRule objects extracted from the parser input string
     */
-    function CSSParser(){ 
+    function CSSParser() {
             
         /*   
             Extracts the selector-like part of a string.  
@@ -115,10 +115,10 @@ Use it responsibly and have fun! ;)
             
             @return {String} The selelector-like string
         */
-        function getSelector(string){
+        function getSelector(string) {
             var sets = string.trim().split(";");
 
-            if (sets.length){
+            if (sets.length) {
                 return sets.pop().trim();
             }  
 
@@ -136,15 +136,15 @@ Use it responsibly and have fun! ;)
             @param {String} string The CSS string where to match property pairs
             @return {Obect} The object with key/value pairs that look like CSS properties
         */
-        function parseCSSProperties(string){
+        function parseCSSProperties(string) {
              var properties = {},
                  sets = string.trim().split(";");
 
-             if (!sets || !sets.length){
+             if (!sets || !sets.length) {
                  return properties;
              }                    
 
-             sets.forEach(function(set){ 
+             sets.forEach(function(set) {
 
                  // invalid key/valye pair
                  if (set.indexOf(":") == -1){ 
@@ -184,7 +184,7 @@ Use it responsibly and have fun! ;)
             }     
             
          */
-         function parseBlocks(string, set, parent){
+         function parseBlocks(string, set, parent) {
              var start = string.indexOf("{"),
                 properties, 
                 rule = new CSSRule,
@@ -194,11 +194,11 @@ Use it responsibly and have fun! ;)
                 end = remainder.indexOf("}"),
                 nextStart = remainder.indexOf("{");
               
-             if (start > 0){
+             if (start > 0) {
                      
                  rule.setSelector(selector);
 
-                 if (parent){  
+                 if (parent) {
                      rule.setParentRule(parent);
                     
                     /*
@@ -221,7 +221,7 @@ Use it responsibly and have fun! ;)
                  }
 
                   // nested blocks! the next "{" occurs before the next "}"
-                 if (nextStart > -1 && nextStart < end){  
+                 if (nextStart > -1 && nextStart < end) {
                      
                      // find where the block ends
                      end = getBalancingBracketIndex(remainder, 1);
