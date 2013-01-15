@@ -22,6 +22,7 @@ What works
   - `NamedFlow.getRegions()` method;
   - `NamedFlow.getContent()` method;
   - `regionlayoutupdate` event on `NamedFlow`;
+  - `Region.regionOverset` property;
 - content reflow due to viewport resize;
 
 What kind of works:
@@ -42,6 +43,5 @@ What doesn't work
 - CSS `region-overset` property;
 - CSS region styling with `@region`;
 - CSS Object Model:
-  - `Region` interface;
   - `Region.getRegionFlowRanges()` method;
-  - `Region.overset` property;
+  - `Region.getComputedRegionStyle()` method;
