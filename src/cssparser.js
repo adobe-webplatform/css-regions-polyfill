@@ -27,17 +27,6 @@ Use it responsibly and have fun! ;)
 */
 !function(scope) {
     
-    // pre-flight setup
-    !function() {
-        if (typeof String.prototype.trim !== "function") {
-            
-            // shameless augmentation of String with a trim function 
-            String.prototype.trim = function(string) {
-                return string.replace(/^\s+/,"").replace(/\s+$/,"");
-            }
-        }
-    }()
-    
     function CSSRule() {
         this.selectorText = null;
         this.style = {};

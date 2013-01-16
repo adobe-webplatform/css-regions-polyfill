@@ -2,7 +2,7 @@ module.exports = function(grunt) {
     
     // Project configuration.
     var project = {
-          files: ['src/StyleLoader.js', 'src/cssparser.js', 'src/cssregions.js']
+          files: ['src/shims.js', 'src/StyleLoader.js', 'src/cssparser.js', 'src/cssregions.js']
     }
     
     grunt.initConfig({
