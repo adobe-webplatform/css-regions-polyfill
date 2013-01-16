@@ -13,6 +13,65 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+// Various shims for missing functionality in older browsers
+!function() {
+    if (typeof String.prototype.trim !== "function") {
+        
+        String.prototype.trim = function(string) {
+            return string.replace(/^\s+/,"").replace(/\s+$/,"");
+        }
+    }
+    
+    if (typeof Array.prototype.forEach !== 'function') {
+        
+        Array.prototype.forEach = function(iterator, thisArg) {
+            if (typeof iterator !== 'function') {
+                throw new TypeError("Invalid parameter. Expected 'function', got " + typeof iterator)
+            }
+            
+            var self = Object(this),
+                len = self.length,
+                i = 0;
+                
+            for (i; i < len; i++) {
+                // call the iterator function within the requested context with the current value, index and source array
+                iterator.call(thisArg, this[i], i, self)
+            }
+        }
+    }
+    
+    if (typeof Array.prototype.indexOf !== 'function') {
+        
+        Array.prototype.indexOf = function(value) {
+            var self = Object(this),
+                matchedIndex = -1;
+            
+            self.forEach(function(item, index) {
+                if (item === value) {
+                    matchedIndex = index
+                    return
+                }
+            })
+            
+            return matchedIndex
+        }
+    }
+}()
+/*!
+Copyright 2012 Adobe Systems Inc.;
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 !(function(scope){
     
     function getStyleSheetElements() {
@@ -159,20 +218,9 @@ building-block for experiments with unsupported CSS rules and properties.
 This experimental parser is not intended to fully comply with any CSS Standard.
 Use it responsibly and have fun! ;)
 */
-!function(scope){  
+!function(scope) {
     
-    // pre-flight setup
-    !function(){
-        if (typeof String.prototype.trim !== "function"){
-            
-            // shameless augmentation of String with a trim function 
-            String.prototype.trim = function(string){
-                return string.replace(/^\s+/,"").replace(/\s+$/,"");
-            }
-        }
-    }()
-    
-    function CSSRule(){ 
+    function CSSRule() {
         this.selectorText = null;
         this.style = {};
         this.type = "rule";
@@ -180,13 +228,13 @@ Use it responsibly and have fun! ;)
     
     CSSRule.prototype = {    
         
-         setSelector: function(string){ 
+         setSelector: function(string) {
             this.selectorText = string;
             
             // detect @-rules in the following format: @rule-name identifier{ }
             var ruleType = string.match(/^@([^\s]+)\s*([^{]+)?/);
 
-            if (ruleType && ruleType[1]){
+            if (ruleType && ruleType[1]) {
                 switch (ruleType[1]){
                     case "template":
                         this.type = "template";
@@ -206,7 +254,7 @@ Use it responsibly and have fun! ;)
             }
         }, 
 
-        setStyle: function(properties){ 
+        setStyle: function(properties) {
             
             if (!properties){
                 throw new TypeError("CSSRule.setStyles(). Invalid input. Expected 'object', got " + properties);
@@ -217,7 +265,7 @@ Use it responsibly and have fun! ;)
             return this.style;
         }, 
 
-        setParentRule: function(rule){
+        setParentRule: function(rule) {
 
             if (!rule){
                 throw new TypeError("CSSRule.setParentRule(). Invalid input. Expected 'object', got " + properties);
@@ -237,7 +285,7 @@ Use it responsibly and have fun! ;)
             .clear() - method to remove any previously parsed data
             .cssRules - array with CSSRule objects extracted from the parser input string
     */
-    function CSSParser(){ 
+    function CSSParser() {
             
         /*   
             Extracts the selector-like part of a string.  
@@ -249,10 +297,10 @@ Use it responsibly and have fun! ;)
             
             @return {String} The selelector-like string
         */
-        function getSelector(string){
+        function getSelector(string) {
             var sets = string.trim().split(";");
 
-            if (sets.length){
+            if (sets.length) {
                 return sets.pop().trim();
             }  
 
@@ -270,15 +318,15 @@ Use it responsibly and have fun! ;)
             @param {String} string The CSS string where to match property pairs
             @return {Obect} The object with key/value pairs that look like CSS properties
         */
-        function parseCSSProperties(string){
+        function parseCSSProperties(string) {
              var properties = {},
                  sets = string.trim().split(";");
 
-             if (!sets || !sets.length){
+             if (!sets || !sets.length) {
                  return properties;
              }                    
 
-             sets.forEach(function(set){ 
+             sets.forEach(function(set) {
 
                  // invalid key/valye pair
                  if (set.indexOf(":") == -1){ 
@@ -318,7 +366,7 @@ Use it responsibly and have fun! ;)
             }     
             
          */
-         function parseBlocks(string, set, parent){
+         function parseBlocks(string, set, parent) {
              var start = string.indexOf("{"),
                 properties, 
                 rule = new CSSRule,
@@ -328,11 +376,11 @@ Use it responsibly and have fun! ;)
                 end = remainder.indexOf("}"),
                 nextStart = remainder.indexOf("{");
               
-             if (start > 0){
+             if (start > 0) {
                      
                  rule.setSelector(selector);
 
-                 if (parent){  
+                 if (parent) {
                      rule.setParentRule(parent);
                     
                     /*
@@ -355,7 +403,7 @@ Use it responsibly and have fun! ;)
                  }
 
                   // nested blocks! the next "{" occurs before the next "}"
-                 if (nextStart > -1 && nextStart < end){  
+                 if (nextStart > -1 && nextStart < end) {
                      
                      // find where the block ends
                      end = getBalancingBracketIndex(remainder, 1);
@@ -669,7 +717,6 @@ window.CSSRegions = function(scope) {
                 return;
             }
             while (executionQueue > 0) {
-                var tmp = new Date().getTime();
                 flowContentIntoRegions();
                 executionQueue--;
             }
@@ -711,7 +758,7 @@ window.CSSRegions = function(scope) {
           
         "NamedFlow": NamedFlow,
         "Collection": Collection
-    }
+    };
 
     var executionQueue = 0;
     var regionsValidFlag = {};
@@ -1422,7 +1469,7 @@ window.CSSRegions = function(scope) {
             return properties.slice(0, properties.length-1);
         }
         
-        return{
+        return {
             cssProperty: function(property, host) {
                 var host = host || document.body;
                 var cssPrefixes = prefixes.split(' ');
@@ -1430,16 +1477,15 @@ window.CSSRegions = function(scope) {
                 // build an array of prefixed properties.
                 var properties = getPrefixedProperties(property, cssPrefixes);
 
-                for (var i = 0, len = properties.length; i < len; i++){
-                    if (host.style[properties[i]] !== undefined){
+                for (var i = 0, len = properties.length; i < len; i++) {
+                    if (host.style[properties[i]] !== undefined) {
                         // the scope for 'this' is injected
-                        this.supportedProperty = properties[i]
-
-                        return true
+                        this.supportedProperty = properties[i];
+                        return true;
                     }
                 }
 
-                return false
+                return false;
             },
 
             omProperty: function(property, host) {
@@ -1451,7 +1497,7 @@ window.CSSRegions = function(scope) {
                 omPrefixes = omPrefixes.slice(1, omPrefixes.length);
 
                 // uppercase the property to attach prefixes
-                var ucProperty = property.charAt(0).toUpperCase() + property.slice(1)
+                var ucProperty = property.charAt(0).toUpperCase() + property.slice(1);
 
                 // build an array of prefixed properties.
                 var properties = getPrefixedProperties(ucProperty, omPrefixes);
@@ -1460,17 +1506,16 @@ window.CSSRegions = function(scope) {
                 properties = properties.slice(0, properties.length-1);
 
                 // add the unprefixed property
-                properties.unshift(property)
+                properties.unshift(property);
 
-                for (var i = 0, len = properties.length; i < len; i++){
-                    if (properties[i] in host){
-                        this.supportedProperty = properties[i]
-
-                        return true
+                for (var i = 0, len = properties.length; i < len; i++) {
+                    if (properties[i] in host) {
+                        this.supportedProperty = properties[i];
+                        return true;
                     }
                 }
 
-                return false
+                return false;
             },
             
             /* 
@@ -1484,35 +1529,34 @@ window.CSSRegions = function(scope) {
             */
             getSupportedProperty: function(property, host, isDOMProperty) {
                 // make it a boolean
-                var isDOMProperty = !!isDOMProperty
+                var isDOMProperty = !!isDOMProperty;
 
                 // scope to inject in checker function to pluck out the supported property
-                var obj = function(){}
-                var inst = new obj
+                var obj = function(){};
+                var inst = new obj;
                 
                 // assume non-prefixed property, let checker function change it
-                inst.supportedProperty = property
+                inst.supportedProperty = property;
                 
-                if (isDOMProperty){
-                    Supports.omProperty.call(inst, property, host)
-                }
-                else{
-                    Supports.cssProperty.call(inst, property, host)
+                if (isDOMProperty) {
+                    Supports.omProperty.call(inst, property, host);
+                } else {
+                    Supports.cssProperty.call(inst, property, host);
                 }
                 
-                return inst.supportedProperty
+                return inst.supportedProperty;
             }
         }
-    })()
+    })();
     
     // using the sledgehammer to test CSS Regions support 
     // until the false positives get fixed in Chrome
     function flowHasOverset() {
-        var test = document.createElement("span"),
+        var flow,
+            test = document.createElement("span"),
             hasOverset = false,
-            flow,
             flowIntoCSSProperty = Supports.getSupportedProperty('flow-into'),
-            getNamedFlows = Supports.getSupportedProperty('getNamedFlows', document, true)
+            getNamedFlows = Supports.getSupportedProperty('getNamedFlows', document, true);
             
         test.id = 'test-regions-support';
         test.style[flowIntoCSSProperty] = 'testflow';
@@ -1520,23 +1564,23 @@ window.CSSRegions = function(scope) {
         
         // Make sure we don't bork if regions methods are missing
         try {
-            flow = document[getNamedFlows].call(document)['testflow']
+            flow = document[getNamedFlows].call(document)['testflow'];
             // older implementations used to have overflow not overset
-            hasOverset = (typeof flow.overset !== 'undefined')
+            hasOverset = (typeof flow.overset !== 'undefined');
         } catch(e) {
         } finally {
             // cleanup
-            test.style[flowIntoCSSProperty] = 'none'
-            test.parentNode.removeChild(test)
-            flow = null
-            return !!hasOverset
+            test.style[flowIntoCSSProperty] = 'none';
+            test.parentNode.removeChild(test);
+            flow = null;
+            return !!hasOverset;
         }
     }
 
-    if (typeof scope.addEventListener === 'undefined'){
-       scope.addEventListener = function(eventName, handler){
-           scope.attachEvent("on" + eventName, handler)
-       }
+    if (typeof scope.addEventListener === 'undefined') {
+       scope.addEventListener = function(eventName, handler) {
+           scope.attachEvent("on" + eventName, handler);
+       };
     }
     
     var timeoutId,
@@ -1551,7 +1595,7 @@ window.CSSRegions = function(scope) {
             
             // Modernizr-esque classes on <html> tag to signal CSS Regions support
             htmlEl.className += " regions";
-            return
+            return;
         }
         
         // no native CSS Regions support, use polyfill
@@ -1568,6 +1612,6 @@ window.CSSRegions = function(scope) {
         });
     })
     
-    return polyfill
+    return polyfill;
     
 }(window);
