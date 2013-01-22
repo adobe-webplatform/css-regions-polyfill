@@ -17,6 +17,7 @@ limitations under the License.
 <head>
     <title>CSS Regions JavaScript Polyfill</title>
     <link rel="stylesheet" href="css/style.css" />
+    <meta name="viewport" content="width=device-width">
 </head>
 <body>
 
@@ -90,7 +91,7 @@ limitations under the License.
             <p class="warn">It is not recommended to use the CSSRegions.js polyfill in a production environment as a substitute for native browser support.</p>
     
             <h3>Known issues</h3>
-            <p>This experimental script has a few known limitations.</p>
+            <p>This experimental script has a few known limitations:</p>
             <ul>
                 <li><strong>Media Queries</strong> - the polyfill does not automatically react to changes determined by media queries;</li>
                 <li><strong>DOM Manipulation</strong> - the polyfill does not automatically react to changes in the document structure; <a href="#workaround-layout">See workaround</a></li>
@@ -99,7 +100,7 @@ limitations under the License.
             </ul>
     
             <h3>Workarounds</h3>
-            <p id="workaround-layout">The polyfill may be forced to re-layout the content by calling <code>CSSRegions.init()</code> in a script, after making changes to the stylesheets or elements in the document.</p>
+            <p id="workaround-layout">The polyfill may be forced to re-layout the content by calling <code>CSSRegions.doLayout()</code> in a script, after making changes to the stylesheets or elements in the document.</p>
             <pre>
 &lt;script&gt;
   // Add elements to the document
