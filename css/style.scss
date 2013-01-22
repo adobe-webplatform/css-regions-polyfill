@@ -1,0 +1,174 @@
+%reset{
+    margin: 0;
+    padding: 0;
+}
+
+body, html{
+    @extend %reset;
+    font-family: source-sans-pro, helvetica, arial, sans-serif;
+    font-size: 100%;
+    color: #333;
+}
+
+h1, h2, h3{
+    @extend %reset;
+    font-family: league-gothic, helvetica, arial, sans-serif;
+}
+
+h1{
+    font-size: 4em;
+}
+
+h2{
+    font-size: 2em;
+    margin: 1em 0 0.5em;
+}
+
+h3{
+    font-size: 1.5em;
+    margin: 2em 0 1em;
+}
+
+pre, code{
+    font-family: source-code-pro, monospace;
+}
+
+pre{
+    padding: 0.5em;
+    margin: 0 0 2em;
+    border: 1px solid #d7d7d7;
+    background: #eee;
+    overflow: auto;
+}
+
+section{
+    margin: 2em 0 1em;
+}
+
+header, article{
+    padding: 0 1em 0;
+}
+
+header{
+    padding-top: 3em;
+    
+    h1{
+        margin: 0 0 35px;
+        margin: 0 0 3rem;
+        color: black;
+    }
+    
+    p{
+        @extend %reset;
+        font-size: 1.1em;
+        line-height: 1.5em;
+        margin: 0 0 1.5em;
+        color: #333;
+    }
+    
+    
+    &:after{
+        content: " ";
+        display: block;
+        clear: both;
+    }
+}
+
+article{
+    p{
+        @extend %reset;
+        margin: 1em 0;
+    }
+    
+    p, li{
+        line-height: 1.5em;
+    }
+}
+
+#download{
+    text-align: center;
+    width: 100%;
+    margin: 0 0 2em;
+    
+    .button{
+        display: block;
+        background: lightgreen;
+        font-size: 2em;
+        color: darkgreen;
+        text-align: center;
+        padding: 0.3em 0;
+        margin: 0 0 0.3em;
+        border-radius: 5px;
+        text-decoration: none;
+        font-family: league-gothic, helvetica, arial, sans-serif;
+    }
+    
+    span{
+        color: #999;
+        font-size: 0.8em;
+        
+        a{
+            color: #999;
+            
+            &:hover{
+                color: darkgray;
+            }
+        }
+    }
+    
+    span + span{
+        display: block;
+    }
+}
+
+.logo{
+    position: absolute;
+    overflow: hidden;
+    right: 10%;
+    top: 0;
+    height: 0;
+    /* hide text beyond overflow */
+    padding-top: 64px;
+    line-height: 64px;
+    width: 42px;
+    background: red;
+}
+
+
+@media screen and (min-width: 42em){
+    header, article{
+        max-width: 40em;
+        margin: 0 auto;
+        font-size: 110%;
+    }
+    
+    section:first-of-type{
+        margin-top: 1em;
+    }
+    
+    .logo{
+        right: 1em;
+    }
+    
+    header{
+        // makes abs position .logo relative to header
+        position: relative;
+        
+        p {
+            float: left;
+            width: 60%;
+            margin-bottom: 0;
+        }
+
+        #download{
+            width: 35%;
+            float: right;
+            margin-bottom: 0;
+            
+            span + span{
+                display: inline;
+            }
+        }
+        
+    }
+}
