@@ -91,6 +91,10 @@ article p, article li {
   text-decoration: none;
   font-family: league-gothic, helvetica, arial, sans-serif;
 }
+#download .button:hover {
+  background: darkgreen;
+  color: white;
+}
 #download span {
   color: #999;
   font-size: 0.8em;

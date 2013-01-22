@@ -101,6 +101,11 @@ article{
         border-radius: 5px;
         text-decoration: none;
         font-family: league-gothic, helvetica, arial, sans-serif;
+        
+        &:hover{
+            background: darkgreen;
+            color: white;
+        }
     }
     
     span{
