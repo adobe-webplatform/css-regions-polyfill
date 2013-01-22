@@ -10,7 +10,8 @@ body, html {
 }
 
 h1, h2, h3 {
-  font-family: league-gothic, helvetica, arial, sans-serif;
+  font-family: league-gothic, helvetica, arial, serif;
+  font-weight: normal;
 }
 
 h1 {
@@ -23,8 +24,9 @@ h2 {
 }
 
 h3 {
-  font-size: 1.5em;
-  margin: 2em 0 1em;
+  font-size: 1.7em;
+  margin: 1.2em 0 0.3em;
+  color: gray;
 }
 
 pre, code {
@@ -52,7 +54,7 @@ header {
 }
 header h1 {
   margin: 0 0 35px;
-  margin: 0 0 3rem;
+  margin: 0 0 2rem;
   color: black;
 }
 header p {
@@ -116,10 +118,10 @@ article p, article li {
   top: 0;
   height: 0;
   /* hide text beyond overflow */
-  padding-top: 64px;
-  line-height: 64px;
-  width: 42px;
-  background: red;
+  padding-top: 4em;
+  width: 2.2em;
+  background: url(../adobelogo.svg) center top no-repeat;
+  background-size: cover;
 }
 
 @media screen and (min-width: 42em) {
