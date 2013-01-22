@@ -47,3 +47,4 @@ playground/content-folding/.DS_Store
 ./node_modules/
 
 test/qunit
+.sass-cache/
