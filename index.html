@@ -24,15 +24,17 @@ limitations under the License.
         <h1>CSSRegions.js</h1>
         
         <a href="html.adobe.com" class="logo">Adobe</a>
+
+        <p>
+            CSSRegions.js is an experimental polyfill that uses JavaScript to bring CSS Regions functionality to browsers that don't support the feature.
+        </p>
         
-        <div class="download">
+        <div id="download">
             <a href="#download" class="button" title="Download the CSSRegions.js polyfill">Download</a>
-            <span>iOS 4+, Android 4+, IE 9+, Firefox, Chrome, Safari 5+</span>
+            <span>iOS 4+, Android 4+, IE 9+, Firefox, Chrome, Safari 5+.</span>
             <span>See <a href="#support">feature support</a>.</span>
         </div>
-        <p>
-            CSSRegions.js is a polyfill that uses JavaScript to bring CSS Regions functionality to browsers that don't support the feature.
-        </p>
+        
     </header>
 
     <article>
@@ -42,21 +44,21 @@ limitations under the License.
             <p>Download and link the <code>cssregions.js</code> script in your page.</p>
             <pre>
 &lt;body&gt;
-...
-&lt;script src=&quot;cssregions.js&quot;&gt;&lt;/script&gt;
+  ...
+  &lt;script src=&quot;cssregions.js&quot;&gt;&lt;/script&gt;
 &lt;/body&gt;
-            </pre>
+</pre>
 
-            <p>Use <a href="http://www.w3.org/TR/css3-regions/">standards-compliant CSS Regions</a> syntax in your stylesheet.</p>
+            <p>Use the regular <a href="http://www.w3.org/TR/css3-regions/">standards-compliant CSS Regions</a> syntax in your stylesheet.</p>
             <pre>
 #content{
   flow-into: myFlow;
 }
 
 .region{
-flow-from: myflow;
+  flow-from: myflow;
 }
-            </pre>
+</pre>
 
             <p>The polyfill is designed to be a drop-in substitute for CSS Regions functionality.</p>
             <p>There's no setup necessary. Just load the polyfill and it will automatically parse and apply the CSS Regions syntax it finds in the page's stylesheets. If the browser supports CSS Regions the polyfill will not be run and it will defer functionality to the native implementation.</p>
@@ -70,13 +72,20 @@ flow-from: myflow;
 
         <section id="support">
             <h2>Browser support</h2>
-    
+            <ul>
+                <li>iOS 4+</li>
+                <li>Android 4+</li>
+                <li>Internet Exporer 9+</li>
+                <li>Firefox</li>
+                <li>Google Chrome</li>
+                <li>Safari 5+</li>
+            </ul>
         </section>
 
         <section id="limitations">
             <h2>Limitations</h2>
     
-            <p>This CSSRegions.js polyfill is <strong>an experimental script</strong> that demonstrates basic CSS Regions features. It uses JavaScript to simulate the functionality as defined by the <a href="http://www.w3.org/TR/css3-regions/">CSS Regions W3C proposal</a>. Because it's using JavaScript, the polyfill performs slower than a native browser implementation of CSS Regions.</p>
+            <p>The CSSRegions.js polyfill is <strong>an experimental script</strong> that demonstrates basic CSS Regions features. It uses JavaScript to simulate the functionality as defined by the <a href="http://www.w3.org/TR/css3-regions/">CSS Regions W3C proposal</a>. Because it's using JavaScript, the polyfill performs slower than a native browser implementation of CSS Regions.</p>
             <p class="warn">It is not recommended to use the CSSRegions.js polyfill in a production environment as a substitute for native browser support.</p>
     
             <h3>Known issues</h3>
@@ -96,7 +105,7 @@ flow-from: myflow;
   // then
   CSSRegions.doLayout()
 &lt;/script&gt;
-            </pre>
+</pre>
         </section>
 
         <section id="license">
