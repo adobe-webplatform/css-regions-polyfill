@@ -16,10 +16,10 @@ libraries and their respective licenses below.
     There are no license information available for this. However Chris Coyier (the author of this example) has
     agreed to let us use his work.
 
-- Human Legacy Project Demo - ./playground/human-legacy-project
+- Paginated Content - ./playground/paginated-content
 
-    The Human Legacy example is released under Creative Commons Attribution-Noncommercial-Share Alike 3.0 license
     Original example can be found here: http://christiancantrell.com/adobe/hlp/callout.html
+    The text is from Mark Twain's novel A Connecticut Yankee in King Arthur's Court.
 
 - Complex Content Flow - ./playground/the-first-example/image.png ./playground/the-first-example/complex-flow.png
 
