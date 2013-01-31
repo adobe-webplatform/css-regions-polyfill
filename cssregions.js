@@ -689,12 +689,12 @@ window.CSSRegions = function(scope) {
             for (var i = 0; i < l; i++) {
                 rule = cssRules[i];
                 for (property in rule.style) {
-                    if (property.indexOf("flow-") !== -1) {
+                    if (property.indexOf("adobe-flow-") !== -1) {
                         
                         value = rule.style[property];  
                         rules[value] = rules[value] || {contentNodesSelectors: [], regionsSelectors: []};
                         
-                        if (property.indexOf("flow-into") !== -1) {
+                        if (property.indexOf("adobe-flow-into") !== -1) {
                             rules[value].contentNodesSelectors.push(rule.selectorText);
                         } else {
                             rules[value].regionsSelectors.push(rule.selectorText);
