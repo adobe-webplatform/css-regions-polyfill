@@ -135,6 +135,17 @@ You can find his work here: http://christiancantrell.com/adobe/hlp/callout.html
                 pageCount,
                 defaultPullQuoteSize = 1,
                 story;
+                
+            function getNamedFlows(){
+                if ('webkitGetNamedFlows' in document){
+                    return document.webkitGetNamedFlows()
+                }
+                else if ('adobeGetNamedFlows' in document){
+                   return document.adobeGetNamedFlows()
+                }
+                
+                return null
+            }
 
             function init() {
                 var timeoutId, namedFlows;
@@ -146,7 +157,10 @@ You can find his work here: http://christiancantrell.com/adobe/hlp/callout.html
                             }, 300);
                         });
                 window.addEventListener("keydown", onKeyDown);
-                namedFlows = document.webkitGetNamedFlows();
+                namedFlows = getNamedFlows();
+                if (!namedFlows){
+                    throw new Error("No CSS Regions support and no polyfill loaded.")
+                }
                 story = namedFlows.namedItem("story");
                 doLayout();
             }
@@ -157,12 +171,14 @@ You can find his work here: http://christiancantrell.com/adobe/hlp/callout.html
                     addPage();
                 } else {
                     story.removeEventListener("webkitregionlayoutupdate", onMainFlowUpdate);
+                    story.removeEventListener("adoberegionlayoutupdate", onMainFlowUpdate);
                     addPullQuotes();
                 }                
             }
 
             function doLayout() {
                 story.addEventListener("webkitregionlayoutupdate", onMainFlowUpdate);
+                story.addEventListener("adoberegionlayoutupdate", onMainFlowUpdate);
                 // First, remove the pull-quote styles.
                 var pqStyles = document.getElementsByClassName("pq_style");
                 var head = document.getElementsByTagName("head")[0];
@@ -287,6 +303,7 @@ You can find his work here: http://christiancantrell.com/adobe/hlp/callout.html
                 var pqText = document.createElement("div");
                 pqText.setAttribute("class", "pull_quote_text_box");
                 pqText.style.webkitFlowFrom = "pq_" + pageCount;
+                pqText.style.adobeFlowFrom = "pq_" + pageCount;
                 pqText.setAttribute("id", "pq_box_" + pageCount);
                 pq.appendChild(pqText);
                 vp.appendChild(pq);
@@ -335,14 +352,16 @@ You can find his work here: http://christiancantrell.com/adobe/hlp/callout.html
                         var quote = document.createElement("div");
                         quote.setAttribute("id", "pq_text_" + index);
                         quote.style.webkitFlowInto = sibling.firstChild.style["-webkit-flow-from"];
+                        quote.style.adobeFlowInto = sibling.firstChild.style["-adobe-flow-from"];
                         quote.innerHTML = pq.innerText;
                         document.getElementById("viewport").appendChild(quote);
                         if (CSSRegions) {
                             CSSRegions.addSourceToNamedFlow("pq_" + index, quote);
                         }
-                        var namedFlows = document.webkitGetNamedFlows();
+                        var namedFlows = getNamedFlows();
                         region = namedFlows.namedItem("pq_"+index);
                         region.addEventListener("webkitregionlayoutupdate", adjustPullQuoteFontSize);
+                        region.addEventListener("adoberegionlayoutupdate", adjustPullQuoteFontSize);
                     }
                     if (CSSRegions) {
                         CSSRegions.doLayout();
@@ -355,6 +374,7 @@ You can find his work here: http://christiancantrell.com/adobe/hlp/callout.html
                 pqStyle.setAttribute("id", "pq_style_" + index);
                 pqStyle.setAttribute("class", "pq_style");
                 var styleText = "#pq_text_" + index + " {-webkit-flow-into:pq_"+index+";";
+                var styleText = "#pq_text_" + index + " {-adobe-flow-into:pq_"+index+";";
                 styleText += "font-size:"+fontSize+"em;";
                 styleText += "font-style:italic;";
                 styleText += "text-align:center;}";
@@ -368,6 +388,7 @@ You can find his work here: http://christiancantrell.com/adobe/hlp/callout.html
                     changePullQuoteStyle(namedFlow, .1);
                 } else  {
                     namedFlow.removeEventListener("webkitregionlayoutupdate", adjustPullQuoteFontSize);
+                    namedFlow.removeEventListener("adoberegionlayoutupdate", adjustPullQuoteFontSize);
                     changePullQuoteStyle(namedFlow, -.1);
                 }
             }
