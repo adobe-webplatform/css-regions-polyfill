@@ -51,19 +51,17 @@ limitations under the License.
 &lt;/body&gt;
 </pre>
 
-            <p>Use the regular <a href="http://www.w3.org/TR/css3-regions/">standards-compliant CSS Regions</a> syntax in your stylesheet.</p>
+            <p>Use <code>-adobe-</code> prefixed <a href="http://www.w3.org/TR/css3-regions/">CSS Regions</a> syntax in your stylesheet.</p>
             <pre>
 #content{
-  flow-into: myFlow;
+  -adobe-flow-into: myFlow;
 }
 
 .region{
-  flow-from: myflow;
+  -adobe-flow-from: myflow;
 }
 </pre>
-
-            <p>The polyfill is designed to be a drop-in substitute for CSS Regions functionality.</p>
-            <p>There's no setup necessary. Just load the polyfill and it will automatically parse and apply the CSS Regions syntax it finds in the page's stylesheets. If the browser supports CSS Regions the polyfill will not be run and it will defer functionality to the native implementation.</p>
+            <p>There's no setup necessary. Just load the polyfill script and it will automatically parse and apply the CSS Regions syntax it finds in the page's stylesheets. If the browser supports CSS Regions, the polyfill will not be run and it will defer functionality to the native implementation.</p>
             
         </section>
 
@@ -81,7 +79,6 @@ limitations under the License.
             <ul>
                 <li>iOS 4+</li>
                 <li>Android 4+</li>
-                <li>Internet Exporer 9+</li>
                 <li>Firefox</li>
                 <li>Google Chrome</li>
                 <li>Safari 5+</li>
@@ -93,6 +90,20 @@ limitations under the License.
     
             <p>The CSSRegions.js polyfill is <strong>an experimental script</strong> that demonstrates basic CSS Regions features. It uses JavaScript to simulate the functionality as defined by the <a href="http://www.w3.org/TR/css3-regions/">CSS Regions W3C proposal</a>. Because it's using JavaScript, the polyfill performs slower than a native browser implementation of CSS Regions.</p>
             <p class="warn">It is not recommended to use the CSSRegions.js polyfill in a production environment as a substitute for native browser support.</p>
+            <p>The polyfill works only with <code>-adobe-</code> prefixed CSS syntax and CSSOM properties.</p>
+            
+            <h3>Prefixed CSS syntax</h3>
+            <ul>
+                <li>Use <code>-adobe-flow-into: IDENT</code> to collect content into a named flow</li>
+                <li>Use <code>-adobe-flow-from: IDENT</code> to render content from a named flow</li>
+            </ul>
+            
+            <h3>Prefixed CSSOM properties and events</h3>
+            <ul>
+                <li>The <code>document.getNamedFlows()</code> method becomes <code>document.adobeGetNamedFlows()</code></li>
+                <li>The <code>regionlayoutupdate</code> event becomes <code>adoberegionlayoutupdate</code></li>
+                <li>The <code>regionOverset</code> property becomes <code>adobeRegionOverset</code></li>
+            </ul>
     
             <h3>Known issues</h3>
             <p>This experimental script has a few known limitations:</p>
@@ -113,6 +124,15 @@ limitations under the License.
 &lt;/script&gt;
 </pre>
         </section>
+        
+        <section id="documentation">
+            <h2>Documentation</h2>
+            <ul>
+                <li><a href="http://docs.webplatform.org/wiki/apis/css-regions" target="_blank">CSS Regions API reference</a></li>
+                <li><a href="http://docs.webplatform.org/wiki/css/tutorials/css-regions" target="_blank">CSS Regions Tutorial</a></li>
+            </ul>
+        </section>
+        
         
         <section id="contributing">
             <h2>Contributing</h2>

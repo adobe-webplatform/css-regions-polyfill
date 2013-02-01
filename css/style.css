@@ -34,10 +34,17 @@ pre, code {
   font-family: source-code-pro, monospace;
 }
 
+code {
+  background: #eee;
+  padding: 0 0.2em;
+  font-size: 0.8em;
+  /*    border: 1px solid #d7d7d7;*/
+}
+
 pre {
   padding: 0.5em;
   margin: 0 0 2em;
-  border: 1px solid #d7d7d7;
+  /*    border: 1px solid #d7d7d7;*/
   background: #eee;
   overflow: auto;
 }
