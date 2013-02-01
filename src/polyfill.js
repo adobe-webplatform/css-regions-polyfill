@@ -55,7 +55,7 @@ window.CSSRegions = function(scope) {
         },
         
         init: function() {
-
+            
             var self = this
             
             if (!window.StyleLoader){
