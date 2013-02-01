@@ -36,6 +36,24 @@ window.CSSRegions = function(scope) {
         // flag if CSS Regions is natively supported in the browser
         hasNativeSupport: false,
         
+        // parse only adobe prefix for now
+        prefixes: {
+            css: '-adobe-',
+            om: 'adobe'
+        },
+        
+        getPrefixedProperty: function(property){
+            return this.prefixes.css.concat(property)
+        },
+        
+        getPrefixedOMProperty: function(property){
+            return this.prefixes.om.concat((property.charAt(0).toUpperCase() + property.slice(1)))
+        },
+        
+        getPrefixedEvent: function(eventName){
+            return this.prefixes.om.concat(eventName)
+        },
+        
         init: function() {
 
             var self = this
@@ -104,27 +122,34 @@ window.CSSRegions = function(scope) {
         getNamedFlowRules: function(cssRules) {
             var rule, property, value,
                 l = cssRules.length,
-                rules = {};
+                rules = {},
+                flowProperty = this.getPrefixedProperty('flow'),
+                flowIntoProperty = this.getPrefixedProperty('flow-into'),
+                flowFromProperty = this.getPrefixedProperty('flow-from');
 
             for (var i = 0; i < l; i++) {
                 rule = cssRules[i];
                 for (property in rule.style) {
-                    if (property.indexOf("adobe-flow-") !== -1) {
+                    if (property.indexOf(flowProperty) !== -1) {
                         
                         value = rule.style[property];  
                         rules[value] = rules[value] || {contentNodesSelectors: [], regionsSelectors: []};
-                        
-                        if (property.indexOf("adobe-flow-into") !== -1) {
+                         
+                        // collect content nodes
+                        if (property.indexOf(flowIntoProperty) !== -1) {
                             rules[value].contentNodesSelectors.push(rule.selectorText);
-                        } else {
+                        }
+                        
+                        // collect regions
+                        if (property.indexOf(flowFromProperty) !== -1) {
                             rules[value].regionsSelectors.push(rule.selectorText);
                         }
                         break;
                     }
                 }
-            }           
+            }
             
-            return rules;        
+            return rules;
         },
         
         doLayout: function() {
@@ -144,7 +169,13 @@ window.CSSRegions = function(scope) {
                                    
         // Polyfill necesary objects/methods on the document/window as specified by the CSS Regions spec
         exposeGlobalOM: function() { 
-            document['getNamedFlows'] = document['webkitGetNamedFlows'] = this.getNamedFlows.bind(this);
+            // keeping non-prefixed value on document because part of the polyfill logic access it directly from the document
+            // TODO: rewrite rogue layout methods to sit inside the polyfill scope and avoid global queries to the document. 
+            
+            var namedFlowsAccessor = 'getNamedFlows',
+                prefixedNamedFlowsAccessor = this.getPrefixedOMProperty(namedFlowsAccessor);
+
+            document[namedFlowsAccessor] = document[prefixedNamedFlowsAccessor] = this.getNamedFlows.bind(this);
         },
           
         /*
@@ -269,7 +300,9 @@ window.CSSRegions = function(scope) {
         var currentRegion, currentFlow, j, m, i, l, destinationNodes, el, tmp, nextSibling,
             sourceNodes = [],
             flows = document.getNamedFlows();
-        
+            
+        var regionOversetProperty = polyfill.getPrefixedOMProperty('regionOverset') 
+            
         for (j = 0, m = flows.length; j < m; j++) {
             currentFlow = flows[j];
             currentFlow.regionsByContent = {content: [], regions: []};
@@ -300,8 +333,7 @@ window.CSSRegions = function(scope) {
                     if (currentFlow.firstEmptyRegionIndex === -1) {
                         currentFlow.firstEmptyRegionIndex = i;
                     }
-                    currentRegion.webKitRegionOverset = "empty";
-                    currentRegion.regionOverset = "empty";
+                    currentRegion[regionOversetProperty] = "empty";
                     continue;
                 }
                 el = sourceNodes.shift();
@@ -325,8 +357,7 @@ window.CSSRegions = function(scope) {
                     currentFlow.lastRegionWithContentIndex = i;
                     // Check if overflows
                     if (checkForOverflow(currentRegion)) {
-                        currentRegion.webKitRegionOverset = "overset";
-                        currentRegion.regionOverset = "overset";
+                        currentRegion[regionOversetProperty] = "overset";
                         currentFlow.overset = true;
                     }
                 } else {
@@ -342,15 +373,16 @@ window.CSSRegions = function(scope) {
                             el = sourceNodes.shift();
                         }
                     }
-                    currentRegion.webKitRegionOverset = "fit";
-                    currentRegion.regionOverset = "fit";
+                    currentRegion[regionOversetProperty] = "fit";
                 }
                 regionsValidFlag[currentFlow.name] = true;
             }  
             // Dispatch regionLayoutUpdate event
             if (currentFlow.regions.length > 0) {
-                currentFlow.fire({type: "regionlayoutupdate", target: currentFlow});
-                currentFlow.fire({type: "webkitregionlayoutupdate", target: currentFlow});
+
+                // TODO: DO NOT access the polyfill like this. This whole method needs to go in the polyfill scope
+                var eventName = polyfill.getPrefixedEvent('regionlayoutupdate')
+                currentFlow.fire({type: eventName, target: currentFlow});
             }
         }
     };
