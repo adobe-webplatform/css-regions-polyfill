@@ -73,7 +73,7 @@ module('CSSOM', {
     setup: function(){
         var style = document.createElement('style')
         style.id = 'testStyle'
-        style.innerHTML = '#testSource { flow-into: myFlow } .region{ flow-from: myFlow; width: 100px; height: 20px; }'
+        style.innerHTML = '#testSource { -adobe-flow-into: myFlow } .region{ -adobe-flow-from: myFlow; width: 100px; height: 20px; }'
 
         var el = document.createElement('div') 
         el.id = 'testHTML'
@@ -132,12 +132,12 @@ test('NamedFlow has contentNodes', function(){
 test('document has getNamedFlows method', function(){
     CSSRegions.init()  
     
-    equal(typeof document.getNamedFlows, 'function', 'getNamedFlows() is defined as function')
-    equal(document.getNamedFlows().length, 1, 'one named flow exists')
-    ok(document.getNamedFlows().item(0), 'named flow can be accessed by item()')
-    ok(document.getNamedFlows().namedItem('myFlow'), 'named flow can be accessed by namedItem()')
-    ok(document.getNamedFlows()[0], 'named flow can be accessed by index')
-    equal(document.getNamedFlows()[0].name, 'myFlow', 'named flow has name')
+    equal(typeof document.adobeGetNamedFlows, 'function', 'getNamedFlows() is defined as function')
+    equal(document.adobeGetNamedFlows().length, 1, 'one named flow exists')
+    ok(document.adobeGetNamedFlows().item(0), 'named flow can be accessed by item()')
+    ok(document.adobeGetNamedFlows().namedItem('myFlow'), 'named flow can be accessed by namedItem()')
+    ok(document.adobeGetNamedFlows()[0], 'named flow can be accessed by index')
+    equal(document.adobeGetNamedFlows()[0].name, 'myFlow', 'named flow has name')
 })
 
 // Prefix support for demos built using only vendor-specific code.
@@ -146,20 +146,20 @@ test('document has getNamedFlows method', function(){
 test('Smoke test prefix support', function(){
     CSSRegions.init()  
     
-    equal(typeof document.webkitGetNamedFlows, 'function', 'webkitGetNamedFlows() is defined as function')
+    equal(typeof document.adobeGetNamedFlows, 'function', 'adobeGetNamedFlows() is defined as function')
 
-    var nf = document.webkitGetNamedFlows().namedItem('myFlow')
-    ok(nf, 'named flow can be accessed by webkitGetNamedFlows()')
+    var nf = document.adobeGetNamedFlows().namedItem('myFlow')
+    ok(nf, 'named flow can be accessed by adobeGetNamedFlows()')
 })
 
 asyncTest('NamedFlow throws regionlayoutupdate event', function(){
     CSSRegions.init()
     
-    var nf = document.getNamedFlows().namedItem('myFlow'),
+    var nf = document.adobeGetNamedFlows().namedItem('myFlow'),
         region1 = document.querySelector('.region');
 
     stop()
-    nf.addEventListener('regionlayoutupdate', function(e){
+    nf.addEventListener('adoberegionlayoutupdate', function(e){
         start()
         equal(e.target.name, 'myFlow')
     })  
