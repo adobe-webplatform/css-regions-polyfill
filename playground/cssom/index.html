@@ -89,22 +89,25 @@ limitations under the License.
 <script>  
                                      
     function init(){
-        var flows = document.webkitGetNamedFlows()
-        var flow = flows.namedItem("article");
-
-        flow.addEventListener("regionlayoutupdate", function(e) {
-            var art, div;
-            if (e.target.overset) {
-                div = document.createElement("div");
-                div.className = "myregions";
-                art = document.getElementById("art");
-                art.appendChild(div);
-                if (CSSRegions) {
-                    CSSRegions.addRegionToNamedFlow(flow.name, div);
-                    CSSRegions.doLayout();
+        var flows, flow;
+        if (CSSRegions && document.adobeGetNamedFlows) {
+            flows = document.adobeGetNamedFlows();
+            flow = flows.namedItem("article");
+            flow.addEventListener("adoberegionlayoutupdate", function(e) {
+                var art, div;
+                if (e.target.overset) {
+                    div = document.createElement("div");
+                    div.className = "myregions";
+                    art = document.getElementById("art");
+                    art.appendChild(div);
+                    if (CSSRegions) {
+                        CSSRegions.addRegionToNamedFlow(flow.name, div);
+                        CSSRegions.doLayout();
+                    }
                 }
-            }
-        })
+            });
+        }
+
     }
     window.addEventListener('load', init)
 
