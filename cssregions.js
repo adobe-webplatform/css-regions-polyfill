@@ -86,6 +86,8 @@ limitations under the License.
             stylesheets = Array.prototype.slice.call(stylesheets, 0);
         } else {
             // old and busted browsers
+
+            // <link rel="stylesheet">
             var tags = doc.getElementsByTagName("link");
 
             if (tags.length) {
@@ -94,6 +96,12 @@ limitations under the License.
                         stylesheets.push(tags[i]);
                     }
                 }
+            }
+            
+            // <style>
+            tags = doc.getElementsByTagName("style");
+            for (var i=0, len = tags.length; i < len; i++) {
+                stylesheets.push(tags[i]);
             }
         }
 
