@@ -46,5 +46,4 @@ playground/content-folding/.DS_Store
 .idea/libraries/sass_stdlib.xml
 ./node_modules/
 
-test/qunit
 .sass-cache/

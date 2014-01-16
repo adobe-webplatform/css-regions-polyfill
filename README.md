@@ -58,20 +58,7 @@ grunt build
 
 ## Testing
 
-The polyfill has a [QUnit](https://github.com/jquery/qunit) test suite in the `/test/` folder. New code should include at least one test.
-
-### Requirements
-
-**Setup QUnit** 
-
-QUnit is linked as a git submodule to this project. Submodules need to be sync-ed before the first test run.
-
-
-Go to the project root directory and sync the git sumbmodules (includes QUnit):
-```
-cd ./path/to/polyfill/
-git submodule update --init
-```
+The polyfill has a [QUnit](https://github.com/jquery/qunit)-driven test suite in the `/test/` folder. New code should include at least one test.
 
 **Run the tests**
 
